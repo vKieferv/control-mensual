@@ -3,414 +3,445 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gastos Casa (Google)</title>
+    <title>Gastos Dúo (Test)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+
     <style>
         body { font-family: 'Outfit', sans-serif; background-color: #f8fafc; }
-        .fade-in { animation: fadeIn 0.5s ease-out; }
+        .fade-in { animation: fadeIn 0.4s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .hidden-view { display: none !important; }
-        .google-btn { transition: all 0.2s; }
-        .google-btn:active { transform: scale(0.95); }
+        .hide-scroll::-webkit-scrollbar { display: none; }
+        
+        /* SEMÁFORO ESTADOS (Tu Lógica) */
+        .card-red { background: white; border-left: 6px solid #ef4444; }      /* Nada */
+        .card-blue { background: #eff6ff; border-left: 6px solid #3b82f6; }    /* Azul: Falta Reembolso (Espera) */
+        .card-yellow { background: #fffbeb; border-left: 6px solid #f59e0b; }  /* Amarillo: Falta Pagar Cta (Alerta) */
+        .card-green { background: #f0fdf4; border-left: 6px solid #22c55e; opacity: 0.7; } /* Verde: Listo */
+
+        /* Badges */
+        .badge-red { background: #fee2e2; color: #991b1b; }
+        .badge-blue { background: #dbeafe; color: #1e40af; }
+        .badge-yellow { background: #fef3c7; color: #92400e; }
+        .badge-green { background: #dcfce7; color: #166534; }
+
+        /* Botones Check */
+        .check-btn { transition: all 0.2s; cursor: pointer; }
+        .check-btn:active { transform: scale(0.95); }
+        .check-active { background-color: #22c55e; border-color: #22c55e; color: white; }
+        .check-inactive { background-color: white; border-color: #cbd5e1; color: #94a3b8; }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen text-slate-800">
 
-    <!-- LOGIN CON GOOGLE -->
-    <div id="view-login" class="flex flex-col items-center justify-center min-h-screen p-6 fade-in">
-        <div class="bg-white p-8 rounded-3xl shadow-xl w-full max-w-sm text-center border border-slate-100">
-            <div class="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                <i class="fas fa-shield-alt text-4xl text-blue-600"></i>
-            </div>
-            <h1 class="text-3xl font-extrabold text-slate-800 mb-2">Acceso Seguro</h1>
-            <p class="text-slate-400 text-sm mb-8">Gestión de Gastos Familiares</p>
-
-            <button onclick="loginWithGoogle()" class="google-btn w-full bg-white border border-slate-300 text-slate-700 font-bold py-4 rounded-xl shadow-sm hover:bg-slate-50 flex items-center justify-center gap-3">
-                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-6 h-6">
-                Entrar con Google
-            </button>
-            
-            <p id="login-error" class="text-red-500 text-xs mt-4 hidden"></p>
-        </div>
-    </div>
+    <!-- LOGIN (OCULTO) -->
+    <div id="view-login" class="hidden flex-col items-center justify-center min-h-screen p-6"></div>
 
     <!-- APP PRINCIPAL -->
-    <div id="view-app" class="hidden-view pb-24 fade-in">
+    <div id="view-app" class="pb-32 fade-in">
         
         <!-- Navbar -->
-        <nav class="bg-white sticky top-0 z-30 px-5 py-3 flex justify-between items-center shadow-sm border-b border-slate-100">
+        <nav class="bg-white sticky top-0 z-30 px-5 py-4 shadow-sm border-b border-slate-100 flex justify-between items-center">
             <div class="flex items-center gap-3">
-                <img id="userPhoto" src="" class="w-10 h-10 rounded-full border-2 border-slate-200">
+                <div class="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold border-2 border-indigo-200">
+                    V
+                </div>
                 <div class="leading-tight">
-                    <p class="text-[10px] uppercase font-bold text-slate-400">Hola,</p>
-                    <p id="userName" class="font-bold text-slate-800 text-sm">Usuario</p>
+                    <p class="text-[10px] uppercase font-bold text-green-500 flex items-center gap-1">
+                        <i class="fas fa-wifi"></i> Online
+                    </p>
+                    <p id="userName" class="font-bold text-slate-800 text-sm">Vicente</p>
                 </div>
             </div>
-            <button onclick="logout()" class="text-slate-400 hover:text-red-500 transition">
-                <i class="fas fa-sign-out-alt text-xl"></i>
-            </button>
+            <div class="bg-slate-100 rounded-lg px-2 py-1">
+                <input type="month" id="monthSelector" class="bg-transparent text-xs font-bold text-slate-600 outline-none cursor-pointer" onchange="changeMonth()">
+            </div>
         </nav>
 
         <main class="p-5 max-w-2xl mx-auto space-y-6">
-            
-            <!-- PANEL ADMIN (Solo visible para correos Admin) -->
-            <div id="admin-panel" class="hidden-view space-y-4">
-                <div class="bg-slate-800 p-6 rounded-3xl shadow-lg text-white relative overflow-hidden">
-                    <i class="fas fa-chart-pie absolute -right-4 -top-4 text-8xl text-white opacity-5"></i>
-                    <p class="text-slate-400 text-xs font-bold uppercase">Total Casa</p>
-                    <h2 class="text-4xl font-extrabold my-1" id="houseTotal">$0</h2>
-                    <div class="flex gap-4 mt-4 text-xs font-bold">
-                        <span class="bg-red-500/20 text-red-200 px-3 py-1 rounded-lg">Por Pagar: <span id="housePending">...</span></span>
-                        <span class="bg-emerald-500/20 text-emerald-200 px-3 py-1 rounded-lg">Pagado: <span id="housePaid">...</span></span>
+
+            <!-- 1. RESUMEN DEUDA -->
+            <div id="debtCard" class="bg-slate-800 p-6 rounded-3xl shadow-lg text-white relative overflow-hidden transition-all">
+                <div class="flex justify-between items-start z-10 relative">
+                    <div>
+                        <p class="text-indigo-300 text-xs font-bold uppercase tracking-widest mb-1">Carlos te debe</p>
+                        <h2 class="text-4xl font-extrabold" id="debtAmount">$0</h2>
+                    </div>
+                    <div class="text-right">
+                        <span class="bg-white/10 px-3 py-1 rounded-full text-[10px] font-bold uppercase backdrop-blur-md text-indigo-100">
+                            Por cobrar
+                        </span>
                     </div>
                 </div>
+            </div>
 
-                <!-- Lista de Integrantes -->
-                <div>
-                    <h3 class="text-xs font-bold text-slate-400 uppercase mb-3 px-1">Integrantes</h3>
-                    <div id="usersList" class="grid grid-cols-1 gap-3"></div>
+            <!-- 2. FORMULARIO CON MEMORIA -->
+            <div id="actionPanel" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 relative z-10">
+                <div class="flex justify-between items-center mb-3">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Nuevo Gasto</p>
+                    <span id="loadingDefaults" class="text-[10px] text-blue-500 animate-pulse hidden">Cargando precios...</span>
                 </div>
                 
-                <div class="h-px bg-slate-200 w-full"></div>
+                <!-- Botones Dinámicos -->
+                <div id="quickButtonsContainer" class="flex gap-2 overflow-x-auto hide-scroll mb-4 pb-1"></div>
+
+                <div class="flex gap-3 mb-3">
+                    <input type="text" id="inputName" placeholder="Concepto" class="w-full p-3 bg-slate-50 rounded-xl font-bold text-slate-700 outline-none text-sm focus:bg-white focus:ring-2 focus:ring-indigo-100 transition">
+                    <input type="number" id="inputAmount" placeholder="$ Total" class="w-1/3 p-3 bg-slate-50 rounded-xl font-bold text-slate-700 outline-none text-center text-sm focus:bg-white focus:ring-2 focus:ring-indigo-100 transition">
+                </div>
+                
+                <!-- Selector Tipo -->
+                <div class="flex gap-2 mb-3 bg-slate-50 p-1 rounded-xl">
+                    <label class="flex-1 cursor-pointer">
+                        <input type="radio" name="expType" value="house" checked class="peer sr-only">
+                        <div class="py-2 text-center text-xs font-bold text-slate-400 rounded-lg peer-checked:bg-white peer-checked:text-indigo-600 peer-checked:shadow-sm transition">
+                            🏠 Compartido (50%)
+                        </div>
+                    </label>
+                    <label class="flex-1 cursor-pointer">
+                        <input type="radio" name="expType" value="personal" class="peer sr-only">
+                        <div class="py-2 text-center text-xs font-bold text-slate-400 rounded-lg peer-checked:bg-white peer-checked:text-emerald-600 peer-checked:shadow-sm transition">
+                            👤 Solo Mío
+                        </div>
+                    </label>
+                </div>
+
+                <button id="saveBtn" onclick="saveExpense()" class="w-full bg-slate-900 text-white py-3 rounded-xl font-bold hover:bg-black transition shadow-lg active:scale-95">Guardar</button>
             </div>
 
-            <!-- PANEL PERSONAL -->
-            <div id="personal-panel">
-                <!-- Header dinámico (cambia si Admin ve a otro) -->
-                <div id="personalHeader" class="flex justify-between items-end mb-2 hidden-view">
-                     <button onclick="showMyView()" class="text-xs bg-slate-200 px-3 py-1 rounded-full font-bold text-slate-600"><i class="fas fa-arrow-left"></i> Volver a mí</button>
-                     <span class="text-xs font-bold text-blue-600 uppercase" id="viewingName">Viendo a X</span>
-                </div>
+            <!-- 3. LISTA DE MOVIMIENTOS -->
+            <div id="expensesContainer" class="space-y-4 pb-10"></div>
 
-                <div class="bg-emerald-600 p-6 rounded-3xl shadow-lg text-white mb-6 transition-colors duration-300" id="personalCard">
-                    <p class="text-emerald-100 text-xs font-bold uppercase">Mis Gastos</p>
-                    <h2 class="text-4xl font-extrabold mt-1" id="myTotal">$0</h2>
-                    <p class="text-right text-emerald-100 text-xs font-bold mt-2" id="myPendingText">Deuda: $0</p>
-                    <div class="w-full bg-black/20 h-1.5 rounded-full mt-2">
-                        <div id="myProgressBar" class="bg-white h-1.5 rounded-full transition-all duration-500" style="width: 0%"></div>
-                    </div>
-                </div>
-
-                <!-- Formulario -->
-                <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 mb-6">
-                    <div class="flex gap-3">
-                        <input type="text" id="inputName" placeholder="Ej: Supermercado" class="w-full p-3 bg-slate-50 rounded-xl font-semibold text-slate-700 outline-none focus:ring-2 focus:ring-blue-500">
-                        <input type="number" id="inputAmount" placeholder="$" class="w-1/3 p-3 bg-slate-50 rounded-xl font-semibold text-slate-700 outline-none focus:ring-2 focus:ring-blue-500 text-center">
-                    </div>
-                    <button id="btnAdd" onclick="addExpense()" class="w-full mt-3 bg-slate-900 text-white py-3 rounded-xl font-bold hover:bg-black transition flex justify-center gap-2">
-                        <span>Guardar</span> <i class="fas fa-cloud-upload-alt"></i>
-                    </button>
-                </div>
-
-                <!-- Lista -->
-                <h3 class="text-xs font-bold text-slate-400 uppercase mb-3 px-1">Movimientos</h3>
-                <div id="expensesList" class="space-y-3 pb-20">
-                    <div class="text-center py-10 text-slate-400 text-sm">Cargando...</div>
-                </div>
-            </div>
         </main>
-        
-        <!-- Reset Mes (Solo Admin) -->
-        <button onclick="resetMonth()" id="adminResetBtn" class="hidden-view fixed bottom-6 right-6 w-14 h-14 bg-indigo-600 text-white rounded-full shadow-2xl flex items-center justify-center text-xl hover:scale-110 transition z-40">
-            <i class="fas fa-calendar-check"></i>
-        </button>
     </div>
 
-    <div id="toast" class="fixed top-6 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-6 py-3 rounded-full shadow-2xl text-sm font-bold opacity-0 transition-all pointer-events-none z-50 transform -translate-y-4">Mensaje</div>
+    <!-- ALERTA DE ERROR (Visible si falla) -->
+    <div id="errorAlert" class="hidden fixed bottom-5 left-5 right-5 bg-red-600 text-white p-4 rounded-2xl shadow-2xl z-50 text-xs font-mono">
+        <p class="font-bold mb-1">⚠️ ERROR DE CONEXIÓN:</p>
+        <span id="errorMsg">...</span>
+    </div>
+
+    <!-- TOAST -->
+    <div id="toast" class="fixed top-6 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-6 py-3 rounded-full shadow-2xl text-xs font-bold opacity-0 transition-all pointer-events-none z-50 -translate-y-4 flex items-center gap-2">
+        <span id="toastMsg">Mensaje</span>
+    </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, doc, updateDoc, deleteDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-
-        // =================================================================
-        // 1. CONFIGURACIÓN DE FIREBASE (PEGA TUS CLAVES AQUÍ)
-        // =================================================================
-        const firebaseConfig = {
-          apiKey: "AIzaSyALsMoeqqLpQge9hMocUHSjmqnpJXNJ9p4",
-          authDomain: "control-mensual-ae833.firebaseapp.com",
-          projectId: "control-mensual-ae833",
-          storageBucket: "control-mensual-ae833.firebasestorage.app",
-          messagingSenderId: "909368343478",
-          appId: "1:909368343478:web:0733b7a0a57cec5893df17"
-        };
-
-        // =================================================================
-        // 2. CONFIGURACIÓN DE FAMILIA (EDITA LOS CORREOS AQUÍ)
-        // =================================================================
-        // Escribe los correos EXACTOS de Gmail de tu familia.
+        import { getFirestore, collection, addDoc, onSnapshot, query, where, doc, updateDoc, deleteDoc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         
-        const FAMILY_CONFIG = {
-            // CORREOS ADMINISTRADORES (Ven todo)
-            'TU_CORREO_ADMIN@gmail.com': { role: 'admin', label: 'Papá Admin' },
+        // ==========================================
+        // 1. TUS CREDENCIALES (¡PEGA AQUÍ!)
+        // ==========================================
+        const firebaseConfig = {
+  apiKey: "AIzaSyALsMoeqqLpQge9hMocUHSjmqnpJXNJ9p4",
+  authDomain: "control-mensual-ae833.firebaseapp.com",
+  projectId: "control-mensual-ae833",
+  storageBucket: "control-mensual-ae833.firebasestorage.app",
+  messagingSenderId: "909368343478",
+  appId: "1:909368343478:web:0733b7a0a57cec5893df17"
+};
+
+        // 2. CONFIGURACIÓN
+        const CONFIG = {
+            ADMIN: 'vicente8sanchez@gmail.com',  
+            PARTNER: 'carlos.real@gmail.com', 
+            TEST_USER: { email: 'vicho.real@gmail.com', name: 'Vicente (Test)', role: 'admin' },
             
-            // CORREOS USUARIOS (Ven solo lo suyo)
-            'CORREO_ESPOSA@gmail.com':   { role: 'user', label: 'Mamá' },
-            'CORREO_HIJO@gmail.com':     { role: 'user', label: 'Hijo' },
-            'CORREO_OTRO@gmail.com':     { role: 'user', label: 'Otro' }
+            // Servicios Base
+            DEFAULT_SERVICES: [
+                { name: 'Arriendo', amount: 350000, icon: 'fa-home', color: 'indigo' },
+                { name: 'Luz', amount: 45000, icon: 'fa-lightbulb', color: 'yellow' },
+                { name: 'Agua', amount: 25000, icon: 'fa-faucet', color: 'blue' },
+                { name: 'Gas', amount: 60000, icon: 'fa-fire', color: 'orange' },
+                { name: 'GC', amount: 90000, icon: 'fa-building', color: 'slate' },
+                { name: 'Internet', amount: 30000, icon: 'fa-wifi', color: 'purple' }
+            ]
         };
 
-        // =================================================================
+        // Inicialización Segura
+        let app, db, auth;
+        try {
+            app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+        } catch(e) {
+            showError("Configuración de Firebase inválida. Revisa el archivo.");
+        }
 
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
-        const provider = new GoogleAuthProvider();
+        let currentUser = CONFIG.TEST_USER;
+        let selectedMonth = new Date().toISOString().slice(0, 7);
+        let allData = [];
+        let expenseDefaults = {};
 
-        let currentUser = null; // Objeto de Google
-        let userRole = 'guest'; // 'admin' | 'user' | 'guest'
-        let allExpenses = [];
-        let viewFilterEmail = null; // Si es null, veo lo mío. Si tiene email, veo ese email (solo admin)
+        // --- CONEXIÓN AUTOMÁTICA (AUTO-LOGIN) ---
+        // Esto permite guardar datos sin mostrar el login de Google
+        if (auth) {
+            signInAnonymously(auth)
+                .then(() => {
+                    initUI(); // Iniciar solo si conecta
+                })
+                .catch((error) => {
+                    showError("No se pudo conectar a la base de datos: " + error.message);
+                });
+        }
 
-        // --- AUTH ---
-        window.loginWithGoogle = async () => {
-            try {
-                await signInWithPopup(auth, provider);
-            } catch (error) {
-                document.getElementById('login-error').textContent = error.message;
-                document.getElementById('login-error').classList.remove('hidden');
-            }
-        };
-
-        window.logout = () => signOut(auth);
-
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                // Verificar si el correo está en la lista permitida
-                const config = FAMILY_CONFIG[user.email];
-                
-                if (config) {
-                    currentUser = user;
-                    userRole = config.role;
-                    // Agregar etiqueta personalizada al objeto user
-                    currentUser.familyLabel = config.label; 
-                    initApp();
-                } else {
-                    // Correo no autorizado
-                    alert("Este correo no está autorizado en la familia.");
-                    signOut(auth);
-                }
-            } else {
-                document.getElementById('view-app').classList.add('hidden-view');
-                document.getElementById('view-login').classList.remove('hidden-view');
-            }
-        });
-
-        // --- LÓGICA APP ---
-        function initApp() {
-            document.getElementById('view-login').classList.add('hidden-view');
-            document.getElementById('view-app').classList.remove('hidden-view');
+        async function initUI() {
+            document.getElementById('monthSelector').value = selectedMonth;
             
-            document.getElementById('userPhoto').src = currentUser.photoURL;
-            document.getElementById('userName').textContent = currentUser.familyLabel; // Usar nombre de config
-
-            if (userRole === 'admin') {
-                document.getElementById('admin-panel').classList.remove('hidden-view');
-                document.getElementById('adminResetBtn').classList.remove('hidden-view');
+            // Etiquetas
+            if(currentUser.email === CONFIG.PARTNER) {
+                document.getElementById('debtLabel').textContent = "Le debes a Vicente";
             } else {
-                document.getElementById('admin-panel').classList.add('hidden-view');
-                document.getElementById('adminResetBtn').classList.add('hidden-view');
+                document.getElementById('debtLabel').textContent = "Carlos te debe";
             }
-
-            viewFilterEmail = currentUser.email; // Por defecto veo lo mío
+            
+            await loadDefaults(); 
+            renderQuickButtons();
             listenData();
         }
 
+        // --- BASE DE DATOS ---
+        async function loadDefaults() {
+            try {
+                const docRef = doc(db, "config", "expense_defaults");
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) expenseDefaults = docSnap.data();
+                else {
+                    expenseDefaults = {};
+                    CONFIG.DEFAULT_SERVICES.forEach(s => expenseDefaults[s.name] = s.amount);
+                }
+            } catch (e) { console.log("Usando defaults locales"); }
+            renderQuickButtons();
+        }
+
+        async function updateDefaultPrice(name, newAmount) {
+            const isKnown = CONFIG.DEFAULT_SERVICES.some(s => s.name === name);
+            if(isKnown) {
+                expenseDefaults[name] = newAmount;
+                try { await setDoc(doc(db, "config", "expense_defaults"), expenseDefaults); } catch(e){}
+                renderQuickButtons();
+            }
+        }
+
         function listenData() {
-            const q = query(collection(db, "gastos"));
+            const q = query(collection(db, "gastos"), where("month", "==", selectedMonth));
             onSnapshot(q, (snapshot) => {
-                allExpenses = [];
-                snapshot.forEach((doc) => allExpenses.push({ id: doc.id, ...doc.data() }));
-                renderUI();
+                allData = [];
+                snapshot.forEach(doc => allData.push({ id: doc.id, ...doc.data() }));
+                renderList();
+            }, (error) => {
+                showError("Permiso denegado. Revisa las Reglas de Firestore en la consola.");
             });
         }
 
-        function renderUI() {
-            if (userRole === 'admin') renderAdminSummary();
-            renderPersonalView();
-        }
+        // --- RENDERIZADO ---
+        function renderQuickButtons() {
+            const container = document.getElementById('quickButtonsContainer');
+            container.innerHTML = '';
 
-        function renderAdminSummary() {
-            // Calcular totales globales
-            const total = allExpenses.reduce((s, e) => s + e.amount, 0);
-            const paid = allExpenses.filter(e => e.paid).reduce((s, e) => s + e.amount, 0);
-            
-            document.getElementById('houseTotal').textContent = formatMoney(total);
-            document.getElementById('housePending').textContent = formatMoney(total - paid);
-            document.getElementById('housePaid').textContent = formatMoney(paid);
+            CONFIG.DEFAULT_SERVICES.forEach(s => {
+                const currentAmount = expenseDefaults[s.name] || s.amount;
+                const formatAmt = currentAmount >= 1000 ? `${Math.round(currentAmount/1000)}k` : currentAmount;
 
-            // Renderizar lista de integrantes
-            const list = document.getElementById('usersList');
-            list.innerHTML = '';
+                const btn = document.createElement('button');
+                let colorClass = `bg-${s.color}-50 text-${s.color}-700 border-${s.color}-100`;
+                // Fallback colores simples si tailwind falla dinamicamente
+                if(s.color==='indigo') colorClass='bg-indigo-50 text-indigo-700 border-indigo-100';
+                if(s.color==='yellow') colorClass='bg-yellow-50 text-yellow-700 border-yellow-100';
+                if(s.color==='blue') colorClass='bg-blue-50 text-blue-700 border-blue-100';
+                if(s.color==='orange') colorClass='bg-orange-50 text-orange-700 border-orange-100';
+                if(s.color==='slate') colorClass='bg-slate-100 text-slate-600 border-slate-200';
+                if(s.color==='purple') colorClass='bg-purple-50 text-purple-700 border-purple-100';
 
-            // Recorremos la CONFIGURACIÓN para mostrar a todos, incluso si no han gastado nada
-            for (const [email, config] of Object.entries(FAMILY_CONFIG)) {
-                // Filtrar gastos de este email
-                const uExps = allExpenses.filter(e => e.userEmail === email);
-                const uTotal = uExps.reduce((s, e) => s + e.amount, 0);
+                btn.className = `shrink-0 ${colorClass} border px-3 py-2 rounded-xl text-xs font-bold transition active:scale-95 flex flex-col items-center min-w-[70px]`;
+                btn.onclick = () => prefill(s.name, currentAmount, true);
                 
-                const div = document.createElement('div');
-                div.className = "bg-slate-700 p-3 rounded-xl flex justify-between items-center cursor-pointer hover:bg-slate-600 transition";
-                div.onclick = () => { viewFilterEmail = email; renderUI(); }; // Al clic, filtrar por este email
-
-                div.innerHTML = `
-                    <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-full bg-slate-500 flex items-center justify-center font-bold text-xs text-white">
-                            ${config.label.charAt(0)}
-                        </div>
-                        <div>
-                            <p class="text-sm font-bold text-white">${config.label}</p>
-                            <p class="text-[10px] text-slate-400">${uExps.length} items</p>
-                        </div>
-                    </div>
-                    <span class="font-bold text-white">${formatMoney(uTotal)}</span>
+                btn.innerHTML = `
+                    <i class="fas ${s.icon} text-lg mb-1"></i>
+                    <span>${s.name}</span>
+                    <span class="text-[9px] opacity-70 font-mono">$${formatAmt}</span>
                 `;
-                list.appendChild(div);
-            }
+                container.appendChild(btn);
+            });
         }
 
-        function renderPersonalView() {
-            const isMe = viewFilterEmail === currentUser.email;
-            const targetConfig = FAMILY_CONFIG[viewFilterEmail];
-            
-            // Header visual
-            const header = document.getElementById('personalHeader');
-            if (!isMe) {
-                header.classList.remove('hidden-view');
-                document.getElementById('viewingName').textContent = `Viendo a: ${targetConfig.label}`;
-                document.getElementById('personalCard').className = "bg-slate-700 p-6 rounded-3xl shadow-lg text-white mb-6"; // Color diferente para auditoría
-            } else {
-                header.classList.add('hidden-view');
-                document.getElementById('personalCard').className = "bg-emerald-600 p-6 rounded-3xl shadow-lg text-white mb-6"; // Color normal
-            }
+        function renderList() {
+            const container = document.getElementById('expensesContainer');
+            container.innerHTML = '';
 
-            // Filtramos gastos
-            const myData = allExpenses.filter(e => e.userEmail === viewFilterEmail);
-            
-            // Cálculos
-            const total = myData.reduce((s, e) => s + e.amount, 0);
-            const paid = myData.filter(e => e.paid).reduce((s, e) => s + e.amount, 0);
-            const pending = total - paid;
-            const percent = total > 0 ? (paid/total)*100 : 0;
+            let totalDebtToVicho = 0;
+            let myView = allData.filter(e => e.type === 'house' || e.userId === currentUser.email);
 
-            document.getElementById('myTotal').textContent = formatMoney(total);
-            document.getElementById('myPendingText').textContent = `Deuda: ${formatMoney(pending)}`;
-            document.getElementById('myProgressBar').style.width = `${percent}%`;
+            // Orden Prioridad: Amarillo > Azul > Rojo > Verde
+            myView.sort((a, b) => getStatusScore(a) - getStatusScore(b));
 
-            // Lista
-            const list = document.getElementById('expensesList');
-            list.innerHTML = '';
-            
-            myData.sort((a,b) => a.paid - b.paid); // Pendientes primero
-
-            if (myData.length === 0) {
-                list.innerHTML = '<div class="text-center py-8 text-slate-400 text-xs">Sin gastos</div>';
+            if(myView.length === 0) {
+                container.innerHTML = `<div class="text-center py-10 opacity-50"><p class="text-xs text-slate-400">Sin registros</p></div>`;
                 return;
             }
 
-            myData.forEach(exp => {
-                const el = document.createElement('div');
-                // Icono simple
-                const icon = exp.paid ? 'fa-check' : 'fa-tag';
-                const color = exp.paid ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-white border-slate-100 text-slate-700';
-                
-                // Permitir borrar si es mío O si soy admin
-                const canDelete = (currentUser.email === exp.userEmail) || (userRole === 'admin');
-                const deleteBtn = canDelete ? `<button onclick="window.deleteExp('${exp.id}')" class="text-slate-300 hover:text-red-500 p-2"><i class="fas fa-trash"></i></button>` : '';
+            myView.forEach(item => {
+                if (item.type === 'house' && !item.paidReimbursement) totalDebtToVicho += (item.amount / 2);
 
-                el.className = `flex justify-between items-center p-4 rounded-2xl border shadow-sm ${color}`;
-                el.innerHTML = `
-                    <div class="flex items-center gap-3 flex-grow cursor-pointer" onclick="window.toggleExp('${exp.id}', ${exp.paid})">
-                        <i class="fas ${icon} ${exp.paid ? 'text-emerald-500' : 'text-slate-300'}"></i>
-                        <div>
-                            <p class="font-bold text-sm leading-none ${exp.paid ? 'line-through opacity-50' : ''}">${exp.name}</p>
-                            <p class="text-xs font-mono opacity-70">${formatMoney(exp.amount)}</p>
+                const state = determineState(item);
+                const isHouse = item.type === 'house';
+                
+                const div = document.createElement('div');
+                div.className = `bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden ${state.cardClass} transition-all duration-300`;
+                
+                const deleteBtn = `<button onclick="deleteExp('${item.id}')" class="text-slate-300 hover:text-red-500"><i class="fas fa-trash"></i></button>`;
+
+                let checksHTML = '';
+                if (isHouse) {
+                    checksHTML = `
+                        <div class="flex gap-2 mt-3 pt-3 border-t border-slate-100/50">
+                            <!-- Botón 1: Pagar Cuenta -->
+                            <button onclick="toggleProvider('${item.id}', ${item.paidProvider})" class="flex-1 py-2.5 rounded-xl text-xs font-bold border flex items-center justify-center gap-2 check-btn ${item.paidProvider ? 'check-active' : 'check-inactive'}">
+                                <i class="fas fa-file-invoice-dollar"></i> ${item.paidProvider ? 'Cta Pagada' : 'Pagar Cta'}
+                            </button>
+                            <!-- Botón 2: Reembolso -->
+                            <button onclick="toggleReimbursement('${item.id}', ${item.paidReimbursement})" class="flex-1 py-2.5 rounded-xl text-xs font-bold border flex items-center justify-center gap-2 check-btn ${item.paidReimbursement ? 'check-active' : 'check-inactive'}">
+                                <i class="fas fa-exchange-alt"></i> ${item.paidReimbursement ? 'Reembolsado' : 'Falta Depósito'}
+                            </button>
                         </div>
+                    `;
+                } else {
+                    checksHTML = `
+                        <div class="mt-2">
+                             <button onclick="toggleProvider('${item.id}', ${item.paidProvider})" class="w-full py-2 rounded-xl text-xs font-bold border flex items-center justify-center gap-2 check-btn ${item.paidProvider ? 'check-active' : 'check-inactive'}">
+                                <i class="fas fa-check"></i> ${item.paidProvider ? 'Pagado' : 'Marcar Pagado'}
+                            </button>
+                        </div>
+                    `;
+                }
+
+                div.innerHTML = `
+                    <div class="p-4">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <h3 class="font-bold text-slate-700 text-lg leading-tight">${item.name}</h3>
+                                <p class="text-xs font-mono font-bold text-slate-400 mt-0.5">${formatMoney(item.amount)} Total</p>
+                            </div>
+                            <div class="text-right">
+                                <span class="px-2 py-1 rounded text-[9px] font-bold uppercase tracking-wider ${state.badgeClass}">${state.label}</span>
+                                <div class="mt-1">${deleteBtn}</div>
+                            </div>
+                        </div>
+                        ${isHouse ? `<p class="text-xs text-indigo-600 font-bold mb-1 ml-1"><i class="fas fa-user-friends mr-1"></i> ${formatMoney(item.amount/2)} c/u</p>` : ''}
+                        ${checksHTML}
                     </div>
-                    ${deleteBtn}
                 `;
-                list.appendChild(el);
+                container.appendChild(div);
             });
+
+            document.getElementById('debtAmount').textContent = formatMoney(totalDebtToVicho);
         }
 
-        // --- ACCIONES WINDOW ---
-        window.showMyView = () => { viewFilterEmail = currentUser.email; renderUI(); };
+        // --- LÓGICA DE ESTADOS ---
+        function determineState(item) {
+            if (item.type !== 'house') {
+                return item.paidProvider 
+                    ? { cardClass: 'card-green', badgeClass: 'badge-green', label: 'LISTO' }
+                    : { cardClass: 'card-red', badgeClass: 'badge-red', label: 'PENDIENTE' };
+            }
 
-        window.addExpense = async () => {
-            const nameEl = document.getElementById('inputName');
-            const amountEl = document.getElementById('inputAmount');
-            const btn = document.getElementById('btnAdd');
-            
-            const name = nameEl.value.trim();
-            const amount = parseInt(amountEl.value);
+            const prov = item.paidProvider;
+            const reimb = item.paidReimbursement;
 
-            // IMPORTANTE: El gasto se asigna al usuario que se está VIENDO actualmente (para que admin pueda asignar gastos a otros)
-            // O, por seguridad simple, siempre asignamos al usuario logueado. 
-            // En este caso, usaremos el usuario logueado EXCEPTO si el admin quiere asignar.
-            // Para simplificar, asignaremos al usuario que está logueado actualmente.
-            // Si el admin está auditando, quizás quiera agregar un gasto a ESA persona.
-            // Hagámoslo flexible:
-            const targetEmail = (userRole === 'admin' && viewFilterEmail) ? viewFilterEmail : currentUser.email;
+            // 1. ROJO: Nada (Prioridad Media)
+            if (!prov && !reimb) return { cardClass: 'card-red', badgeClass: 'badge-red', label: 'IMPAGO' };
             
-            if (!name || isNaN(amount)) return showToast("Datos inválidos");
+            // 2. AMARILLO: Carlos pagó, Falta Cuenta (Prioridad Alta - Alerta)
+            if (!prov && reimb) return { cardClass: 'card-yellow', badgeClass: 'badge-yellow', label: 'FALTA CTA' };
+            
+            // 3. AZUL: Vicho pagó, Falta Reembolso (Prioridad Media - Espera)
+            if (prov && !reimb) return { cardClass: 'card-blue', badgeClass: 'badge-blue', label: 'FALTA DEPÓSITO' };
+            
+            // 4. VERDE: Todo listo (Prioridad Baja)
+            if (prov && reimb) return { cardClass: 'card-green', badgeClass: 'badge-green', label: 'CERRADO' };
+        }
 
-            btn.disabled = true; 
-            
+        function getStatusScore(item) {
+             const s = determineState(item);
+             if (s.cardClass === 'card-yellow') return 1; // Urgente
+             if (s.cardClass === 'card-blue') return 2;   // Espera
+             if (s.cardClass === 'card-red') return 3;    // Pendiente normal
+             return 4; // Cerrado
+        }
+
+        // --- ACCIONES ---
+        window.changeMonth = () => { selectedMonth = document.getElementById('monthSelector').value; listenData(); };
+
+        window.prefill = (name, amount, isHouse) => {
+            document.getElementById('inputName').value = name;
+            document.getElementById('inputAmount').value = amount;
+            const radios = document.getElementsByName('expType');
+            radios.forEach(r => { if(r.value === (isHouse ? 'house' : 'personal')) r.checked = true; });
+            if(!amount) document.getElementById('inputAmount').focus();
+        };
+
+        window.saveExpense = async () => {
+            const name = document.getElementById('inputName').value;
+            const amount = parseInt(document.getElementById('inputAmount').value);
+            const type = document.querySelector('input[name="expType"]:checked').value;
+            const btn = document.getElementById('saveBtn');
+
+            if(!name || isNaN(amount)) return showToast("Datos incompletos");
+            btn.disabled = true;
+
             try {
                 await addDoc(collection(db, "gastos"), {
-                    userEmail: targetEmail, // Asociamos por correo
+                    userId: currentUser.email,
                     name: name,
                     amount: amount,
-                    paid: false,
+                    type: type, 
+                    month: selectedMonth,
+                    paidProvider: false,      
+                    paidReimbursement: false, 
                     date: Date.now()
                 });
-                nameEl.value = ''; amountEl.value = '';
+                
+                if(type === 'house') await updateDefaultPrice(name, amount);
+                
+                document.getElementById('inputName').value = '';
+                document.getElementById('inputAmount').value = '';
                 showToast("Guardado");
-            } catch(e) { showToast("Error"); }
+            } catch(e) { 
+                console.error(e); 
+                showError("Error al guardar: " + e.message);
+            }
             btn.disabled = false;
         };
 
-        window.toggleExp = async (id, status) => {
-            try { await updateDoc(doc(db, "gastos", id), { paid: !status }); } catch(e){}
-        };
+        window.toggleProvider = async (id, status) => { await updateDoc(doc(db, "gastos", id), { paidProvider: !status }); };
+        window.toggleReimbursement = async (id, status) => { await updateDoc(doc(db, "gastos", id), { paidReimbursement: !status }); };
+        window.deleteExp = async (id) => { if(confirm("¿Eliminar?")) await deleteDoc(doc(db, "gastos", id)); };
 
-        window.deleteExp = async (id) => {
-            if(confirm("¿Borrar?")) try { await deleteDoc(doc(db, "gastos", id)); } catch(e){}
-        };
-        
-        window.resetMonth = async () => {
-            if(!confirm("¿NUEVO MES? Se desmarcarán todos los pagos.")) return;
-            // Batch update (simple)
-            // Nota: En prod usar Cloud Functions para esto, pero aquí en cliente:
-            const q = query(collection(db, "gastos"));
-            // ... lógica simplificada para demo (iterar)
-             // Firestore SDK cliente no tiene "updateAll", hay que iterar.
-             // Para evitar descargas masivas, solo avisamos. 
-             alert("Para reiniciar mes en versión Google, elimina o edita manualmente. (Función masiva deshabilitada por seguridad en demo)");
-        };
-
+        // Helpers
         function formatMoney(val) { return new Intl.NumberFormat('es-CL', {style:'currency', currency:'CLP', maximumFractionDigits:0}).format(val); }
         function showToast(msg) {
             const t = document.getElementById('toast'); t.textContent = msg;
-            t.classList.remove('opacity-0', '-translate-y-4');
-            setTimeout(() => t.classList.add('opacity-0', '-translate-y-4'), 3000);
+            t.classList.remove('-translate-y-4', 'opacity-0');
+            setTimeout(() => t.classList.add('-translate-y-4', 'opacity-0'), 3000);
         }
+        function showError(msg) {
+            document.getElementById('errorMsg').textContent = msg;
+            document.getElementById('errorAlert').classList.remove('hidden');
+        }
+
+        // Exponer globalmente
+        window.changeMonth = window.changeMonth;
+        window.prefill = window.prefill;
+        window.saveExpense = window.saveExpense;
+        window.toggleProvider = window.toggleProvider;
+        window.toggleReimbursement = window.toggleReimbursement;
+        window.deleteExp = window.deleteExp;
     </script>
 </body>
 </html>
-```
 
-### ⚠️ Instrucciones Críticas de Configuración ⚠️
-
-1.  **Firebase Config:** Pega tus llaves (`apiKey`, `authDomain`, etc.) donde dice `TU_API_KEY`.
-2.  **Family Config (¡Nuevo!):** Busca la sección `const FAMILY_CONFIG`.
-    * **Debes escribir los correos Gmail reales**.
-    * Ejemplo:
-        ```javascript
-        const FAMILY_CONFIG = {
-            'papa.perez@gmail.com': { role: 'admin', label: 'Papá' },
-            'mama.perez@gmail.com': { role: 'user', label: 'Mamá' }
-        };
 
