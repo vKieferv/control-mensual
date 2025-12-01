@@ -3,292 +3,599 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mis Cuentas Mensuales</title>
-    <!-- Tailwind CSS para diseño -->
+    <title>Control Gastos Familiar</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Iconos -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <!-- Fuente -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
 
     <style>
-        body { font-family: 'Poppins', sans-serif; background-color: #f3f4f6; }
+        body { font-family: 'Outfit', sans-serif; background-color: #f1f5f9; }
         
-        .card-summary {
-            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-            color: white;
-        }
-
-        .expense-item {
-            transition: all 0.3s ease;
-        }
-
-        /* Estilo cuando está pagado */
-        .expense-item.paid {
-            background-color: #f0fdf4; /* Fondo verde muy claro */
-            border-left: 5px solid #22c55e; /* Borde verde */
-            opacity: 0.7;
-        }
+        /* Animaciones */
+        .fade-in { animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
-        .expense-item.paid h3 {
-            text-decoration: line-through;
-            color: #86efac;
-        }
+        .spin-slow { animation: spin 2s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-        /* Estilo cuando está pendiente */
-        .expense-item.pending {
-            background-color: white;
-            border-left: 5px solid #ef4444; /* Borde rojo */
-        }
-
-        .checkbox-custom {
-            width: 25px;
-            height: 25px;
-            cursor: pointer;
-            accent-color: #22c55e;
-        }
+        /* Utilidades */
+        .hidden-view { display: none !important; }
+        .glass-panel { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+        
+        /* Temas */
+        .bg-admin { background: linear-gradient(135deg, #0f172a 0%, #334155 100%); color: white; }
+        .bg-user { background: linear-gradient(135deg, #059669 0%, #10b981 100%); color: white; }
+        .card-hover:active { transform: scale(0.98); }
     </style>
 </head>
-<body class="pb-12">
+<body class="bg-slate-100 min-h-screen text-slate-800">
 
-    <!-- Encabezado Resumen -->
-    <div class="card-summary p-6 rounded-b-3xl shadow-lg sticky top-0 z-20">
-        <div class="flex justify-between items-center mb-4">
-            <h1 class="text-xl font-light">Resumen Mensual</h1>
-            <button onclick="confirmResetMonth()" class="text-xs bg-white/20 hover:bg-white/30 px-3 py-1 rounded-full text-white transition">
-                <i class="fas fa-sync-alt"></i> Nuevo Mes
+    <!-- ======================= VISTA LOGIN ======================= -->
+    <div id="view-login" class="flex flex-col items-center justify-center min-h-screen p-6 fade-in relative overflow-hidden">
+        <!-- Decoración de fondo -->
+        <div class="absolute top-[-10%] left-[-10%] w-64 h-64 bg-blue-200 rounded-full blur-3xl opacity-30"></div>
+        <div class="absolute bottom-[-10%] right-[-10%] w-64 h-64 bg-green-200 rounded-full blur-3xl opacity-30"></div>
+
+        <div class="glass-panel p-8 rounded-3xl shadow-2xl w-full max-w-sm text-center relative z-10 border border-white">
+            <div class="mb-6 inline-flex items-center justify-center w-20 h-20 bg-blue-50 rounded-full text-blue-600 shadow-sm">
+                <i class="fas fa-home text-4xl"></i>
+            </div>
+            
+            <h1 class="text-3xl font-extrabold text-slate-800 mb-1">Bienvenido</h1>
+            <p class="text-slate-400 text-sm mb-8">Control de Gastos Familiar</p>
+
+            <div id="login-loader" class="hidden mb-4 text-blue-500 font-bold text-sm flex items-center justify-center gap-2">
+                <i class="fas fa-circle-notch spin-slow"></i> Conectando...
+            </div>
+
+            <div class="space-y-4 text-left">
+                <div>
+                    <label class="text-xs font-bold text-slate-400 uppercase ml-1">Perfil</label>
+                    <select id="loginUser" class="w-full mt-1 p-4 border-0 bg-slate-100 rounded-2xl text-slate-700 font-semibold focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+                        <option value="1">👨‍👩‍👧‍👦 Administrador (Casa)</option>
+                        <option value="2">👤 Usuario 2</option>
+                        <option value="3">👤 Usuario 3</option>
+                        <option value="4">👤 Usuario 4</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="text-xs font-bold text-slate-400 uppercase ml-1">Clave (PIN)</label>
+                    <input type="tel" id="loginPin" placeholder="••••" maxlength="4" class="w-full mt-1 p-4 border-0 bg-slate-100 rounded-2xl text-center text-2xl tracking-[0.5em] font-bold text-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+                </div>
+            </div>
+
+            <button onclick="attemptLogin()" class="w-full mt-8 bg-slate-900 hover:bg-black text-white font-bold py-4 rounded-2xl shadow-lg transition-all transform hover:-translate-y-1 active:translate-y-0">
+                Entrar
             </button>
         </div>
-
-        <div class="flex justify-between items-end mb-2">
-            <div>
-                <p class="text-sm text-gray-400">Por Pagar</p>
-                <p id="totalPending" class="text-3xl font-bold text-red-400">$0</p>
-            </div>
-            <div class="text-right">
-                <p class="text-sm text-gray-400">Total Gastos</p>
-                <p id="totalDebt" class="text-xl font-semibold">$0</p>
-            </div>
-        </div>
-
-        <!-- Barra de Progreso -->
-        <div class="w-full bg-gray-700 rounded-full h-4 mt-2 relative overflow-hidden">
-            <div id="progressBar" class="bg-green-500 h-4 rounded-full transition-all duration-500" style="width: 0%"></div>
-        </div>
-        <p class="text-xs text-right mt-1 text-gray-400">Pagado: <span id="percentText">0%</span></p>
     </div>
 
-    <main class="p-5 max-w-xl mx-auto">
+    <!-- ======================= VISTA APP ======================= -->
+    <div id="view-app" class="hidden-view pb-28 fade-in relative">
         
-        <!-- Formulario de Agregar -->
-        <div class="bg-white p-4 rounded-xl shadow-sm mb-6 border border-gray-100">
-            <h2 class="text-gray-700 font-semibold mb-3 text-sm uppercase tracking-wide">Agregar Nuevo Gasto</h2>
-            <div class="flex gap-2 mb-2">
-                <input type="text" id="inputName" placeholder="Nombre (ej: Arriendo)" class="flex-grow p-3 bg-gray-50 rounded-lg border border-gray-200 outline-none focus:border-blue-500">
+        <!-- Navbar -->
+        <nav class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-30 px-5 py-3 flex justify-between items-center border-b border-slate-100">
+            <div class="flex items-center gap-3">
+                <div id="navAvatar" class="w-10 h-10 rounded-full bg-slate-800 text-white flex items-center justify-center font-bold text-lg shadow-md">
+                    A
+                </div>
+                <div class="leading-tight">
+                    <p class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Conectado como</p>
+                    <p id="navUsername" class="font-bold text-slate-800">Admin</p>
+                </div>
             </div>
-            <div class="flex gap-2">
-                <input type="number" id="inputAmount" placeholder="Monto" class="flex-grow p-3 bg-gray-50 rounded-lg border border-gray-200 outline-none focus:border-blue-500">
-                <button onclick="addExpense()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 rounded-lg font-bold shadow-md transition">
-                    <i class="fas fa-plus"></i>
-                </button>
-            </div>
-        </div>
+            <button onclick="logout()" class="w-9 h-9 rounded-full bg-red-50 text-red-500 hover:bg-red-100 flex items-center justify-center transition">
+                <i class="fas fa-power-off"></i>
+            </button>
+        </nav>
 
-        <!-- Lista de Gastos -->
-        <div id="expenseList" class="space-y-3">
-            <!-- Aquí se inyectan los gastos -->
-            <div class="text-center text-gray-400 py-10">
-                <i class="fas fa-wallet text-4xl mb-3 opacity-30"></i>
-                <p>No tienes gastos registrados.</p>
-            </div>
-        </div>
+        <!-- CONTENIDO PRINCIPAL -->
+        <main class="p-5 max-w-2xl mx-auto space-y-6">
 
-    </main>
-
-    <!-- Notificación Flotante -->
-    <div id="toast" class="fixed bottom-5 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg text-sm opacity-0 transition-opacity duration-300 pointer-events-none">
-        Acción realizada
-    </div>
-
-    <script>
-        // --- LÓGICA DE LA APLICACIÓN ---
-
-        let expenses = [];
-
-        // 1. Cargar datos al iniciar
-        document.addEventListener('DOMContentLoaded', () => {
-            const savedData = localStorage.getItem('myExpensesApp');
-            if (savedData) {
-                expenses = JSON.parse(savedData);
-                renderExpenses();
-            }
-        });
-
-        // 2. Guardar datos
-        function saveData() {
-            localStorage.setItem('myExpensesApp', JSON.stringify(expenses));
-            updateSummary();
-        }
-
-        // 3. Formato Moneda (CLP)
-        const formatMoney = (amount) => {
-            return new Intl.NumberFormat('es-CL', {
-                style: 'currency',
-                currency: 'CLP',
-                maximumFractionDigits: 0
-            }).format(amount);
-        };
-
-        // 4. Agregar Gasto
-        function addExpense() {
-            const nameInput = document.getElementById('inputName');
-            const amountInput = document.getElementById('inputAmount');
-            
-            const name = nameInput.value.trim();
-            const amount = parseInt(amountInput.value);
-
-            if (!name || isNaN(amount) || amount <= 0) {
-                showToast("Por favor ingresa un nombre y un monto válido.");
-                return;
-            }
-
-            const newExpense = {
-                id: Date.now(),
-                name: name,
-                amount: amount,
-                paid: false
-            };
-
-            expenses.push(newExpense);
-            saveData();
-            renderExpenses();
-            
-            // Limpiar inputs
-            nameInput.value = '';
-            amountInput.value = '';
-            nameInput.focus();
-            showToast("Gasto agregado correctamente");
-        }
-
-        // 5. Borrar Gasto
-        function deleteExpense(id) {
-            if(confirm("¿Estás seguro de borrar este gasto permanentemente?")) {
-                expenses = expenses.filter(exp => exp.id !== id);
-                saveData();
-                renderExpenses();
-                showToast("Gasto eliminado");
-            }
-        }
-
-        // 6. Cambiar Estado (Pagado / No Pagado)
-        function toggleStatus(id) {
-            const expense = expenses.find(exp => exp.id === id);
-            if (expense) {
-                expense.paid = !expense.paid;
-                saveData();
-                renderExpenses();
+            <!-- ============ SECCIÓN ADMIN (Solo visible para Admin) ============ -->
+            <div id="admin-panel" class="hidden-view space-y-6">
                 
-                // Efecto de vibración si está en móvil
-                if (navigator.vibrate) navigator.vibrate(50);
-            }
-        }
-
-        // 7. Reiniciar Mes (Pone todo en "No Pagado")
-        function confirmResetMonth() {
-            if(expenses.length === 0) return;
-            
-            if(confirm("¿Empezó un nuevo mes? Esto marcará todas las cuentas como 'No Pagadas', pero NO las borrará.")) {
-                expenses.forEach(exp => exp.paid = false);
-                saveData();
-                renderExpenses();
-                showToast("¡Nuevo mes iniciado! A pagar...");
-            }
-        }
-
-        // 8. Renderizar (Dibujar) la lista
-        function renderExpenses() {
-            const listContainer = document.getElementById('expenseList');
-            listContainer.innerHTML = '';
-
-            // Ordenar: Primero los pendientes, luego los pagados
-            expenses.sort((a, b) => a.paid - b.paid);
-
-            if (expenses.length === 0) {
-                listContainer.innerHTML = `
-                    <div class="text-center text-gray-400 py-10">
-                        <i class="fas fa-wallet text-4xl mb-3 opacity-30"></i>
-                        <p>Agrega tus gastos fijos aquí.</p>
-                    </div>`;
-                updateSummary();
-                return;
-            }
-
-            expenses.forEach(exp => {
-                const item = document.createElement('div');
-                // Clases dinámicas según estado
-                item.className = `expense-item ${exp.paid ? 'paid' : 'pending'} flex items-center justify-between p-4 rounded-lg shadow-sm bg-white mb-3`;
-                
-                item.innerHTML = `
-                    <div class="flex items-center gap-4 flex-grow" onclick="toggleStatus(${exp.id})">
-                        <div class="relative">
-                            <input type="checkbox" ${exp.paid ? 'checked' : ''} class="checkbox-custom pointer-events-none">
+                <!-- Tarjeta Resumen Total -->
+                <div class="bg-admin p-6 rounded-3xl shadow-xl relative overflow-hidden">
+                    <div class="absolute right-[-20px] top-[-20px] opacity-10 text-9xl text-white pointer-events-none"><i class="fas fa-chart-pie"></i></div>
+                    
+                    <p class="text-slate-300 text-xs font-bold uppercase tracking-widest mb-1">Gasto Total del Hogar</p>
+                    <h2 class="text-4xl font-extrabold text-white mb-4 tracking-tight" id="houseTotal">$0</h2>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-white/10 p-3 rounded-xl backdrop-blur-sm">
+                            <p class="text-[10px] text-red-200 uppercase font-bold">Por Pagar</p>
+                            <p class="text-lg font-bold text-white" id="housePending">$0</p>
                         </div>
+                        <div class="bg-white/10 p-3 rounded-xl backdrop-blur-sm">
+                            <p class="text-[10px] text-green-200 uppercase font-bold">Pagado</p>
+                            <p class="text-lg font-bold text-white" id="housePaid">$0</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lista de Usuarios (Clic para ver detalles) -->
+                <div>
+                    <div class="flex justify-between items-end mb-3 px-1">
+                        <h3 class="text-slate-500 font-bold text-xs uppercase tracking-wider">Desglose por Integrante</h3>
+                        <span class="text-[10px] text-blue-500 bg-blue-50 px-2 py-1 rounded-full">Toca para ver detalles</span>
+                    </div>
+                    <div id="usersSummaryList" class="grid grid-cols-2 gap-3">
+                        <!-- Se llena con JS -->
+                    </div>
+                </div>
+
+                <div class="h-px w-full bg-slate-200 my-4"></div>
+                
+                <!-- Título dinámico para Admin -->
+                <div id="adminSectionTitle" class="text-center bg-slate-100 p-2 rounded-lg text-slate-500 text-xs font-bold uppercase tracking-wider">
+                    Mis Gastos Personales
+                </div>
+            </div>
+
+            <!-- ============ SECCIÓN PERSONAL / DETALLE ============ -->
+            <div id="personal-panel">
+                
+                <!-- Botón Volver (Solo aparece cuando Admin ve detalles de otro) -->
+                <button id="btnBackToAdmin" onclick="showAdminView()" class="hidden-view w-full mb-4 bg-slate-200 text-slate-600 py-2 rounded-xl font-bold text-sm">
+                    <i class="fas fa-arrow-left mr-2"></i> Volver al Resumen General
+                </button>
+
+                <!-- Tarjeta Resumen Personal -->
+                <div id="personalCard" class="bg-user p-6 rounded-3xl shadow-lg mb-6 transition-all duration-300">
+                    <div class="flex justify-between items-start mb-2">
                         <div>
-                            <h3 class="font-semibold text-gray-800 ${exp.paid ? 'line-through text-gray-400' : ''}">${exp.name}</h3>
-                            <p class="text-sm ${exp.paid ? 'text-green-600 font-bold' : 'text-gray-500'}">
-                                ${exp.paid ? 'PAGADO' : formatMoney(exp.amount)}
-                            </p>
+                            <p class="text-white/80 text-xs font-bold uppercase tracking-widest" id="personalCardTitle">Mis Gastos</p>
+                            <h2 class="text-4xl font-extrabold text-white mt-1" id="myTotal">$0</h2>
+                        </div>
+                        <div class="text-right">
+                            <span class="bg-black/20 text-white px-3 py-1 rounded-full text-xs font-bold backdrop-blur-md" id="myPendingBadge">Deuda: $0</span>
+                        </div>
+                    </div>
+                    <!-- Barra de Progreso -->
+                    <div class="relative w-full h-2 bg-black/20 rounded-full mt-4 overflow-hidden">
+                        <div id="myProgressBar" class="absolute top-0 left-0 h-full bg-white rounded-full transition-all duration-700 ease-out" style="width: 0%"></div>
+                    </div>
+                    <p class="text-right text-[10px] text-white/80 mt-1" id="myProgressText">0% Pagado</p>
+                </div>
+
+                <!-- Formulario Agregar Gasto -->
+                <div id="addExpenseForm" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 mb-6">
+                    <h3 class="text-slate-400 font-bold text-[10px] uppercase tracking-wider mb-3">Nuevo Movimiento</h3>
+                    <div class="flex gap-3">
+                        <div class="relative w-2/3">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-tag text-slate-300"></i>
+                            </div>
+                            <input type="text" id="inputName" placeholder="Ej: Supermercado" class="w-full pl-10 p-3 bg-slate-50 rounded-xl border-none font-semibold text-slate-700 placeholder-slate-400 focus:ring-2 focus:ring-blue-500 transition-all">
+                        </div>
+                        <input type="number" id="inputAmount" placeholder="$" class="w-1/3 p-3 bg-slate-50 rounded-xl border-none font-semibold text-slate-700 placeholder-slate-400 focus:ring-2 focus:ring-blue-500 text-center transition-all">
+                    </div>
+                    <button id="btnAdd" onclick="addExpense()" class="w-full mt-3 bg-slate-800 hover:bg-black text-white py-3 rounded-xl font-bold text-sm shadow-md transition-all active:scale-95 flex items-center justify-center gap-2">
+                        <span>Guardar</span> <i class="fas fa-paper-plane text-xs"></i>
+                    </button>
+                </div>
+
+                <!-- Lista de Gastos -->
+                <div>
+                    <div class="flex justify-between items-center px-2 mb-3">
+                        <h3 class="text-slate-500 font-bold text-xs uppercase tracking-wider" id="listTitle">Movimientos</h3>
+                        <div id="loading-indicator" class="hidden text-blue-500 text-xs font-bold animate-pulse">
+                            <i class="fas fa-sync fa-spin mr-1"></i> Actualizando...
                         </div>
                     </div>
                     
-                    <button onclick="deleteExpense(${exp.id})" class="text-gray-300 hover:text-red-500 p-2 transition">
-                        <i class="fas fa-trash-alt"></i>
-                    </button>
+                    <div id="expensesList" class="space-y-3 pb-20">
+                        <!-- Lista Dinámica -->
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Botón Flotante Reset (Solo Admin) -->
+        <div id="admin-controls" class="hidden-view fixed bottom-6 right-6 z-40">
+            <button onclick="resetMonth()" class="w-14 h-14 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full shadow-2xl shadow-indigo-500/40 flex items-center justify-center text-xl transition-all hover:scale-110 active:scale-90">
+               <i class="fas fa-calendar-check"></i>
+           </button>
+       </div>
+
+    </div>
+
+    <!-- Notificación Toast -->
+    <div id="toast" class="fixed top-6 left-1/2 transform -translate-x-1/2 bg-slate-900 text-white px-6 py-3 rounded-full shadow-2xl text-sm font-bold opacity-0 transition-all duration-300 pointer-events-none z-50 flex items-center gap-3 translate-y-[-20px]">
+        <i class="fas fa-check-circle text-green-400"></i> <span id="toastMsg">Mensaje</span>
+    </div>
+
+    <!-- CONFIGURACIÓN DE FIREBASE (TYPE MODULE) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, doc, updateDoc, deleteDoc, writeBatch, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+        // =================================================================
+        // 🚨 PEGA TU CONFIGURACIÓN AQUÍ ABAJO ENTRE LAS LLAVES { ... }
+        // =================================================================
+        const firebaseConfig = {
+              apiKey: "AIzaSyALsMoeqqLpQge9hMocUHSjmqnpJXNJ9p4",
+              authDomain: "control-mensual-ae833.firebaseapp.com",
+              projectId: "control-mensual-ae833",
+              storageBucket: "control-mensual-ae833.firebasestorage.app",
+              messagingSenderId: "909368343478",
+              appId: "1:909368343478:web:0733b7a0a57cec5893df17"
+        };
+        // =================================================================
+
+        // Inicializar Firebase
+        let app, db, auth;
+        
+        try {
+            app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+        } catch (error) {
+            console.error("Error iniciando Firebase. Verifica la configuración.", error);
+            showToast("Error de Configuración Firebase");
+        }
+
+        // --- ESTADO Y VARIABLES ---
+        let currentUserProfile = null; 
+        let viewMode = 'personal'; // 'personal' | 'admin-viewing-user'
+        let viewingUserId = null; // ID del usuario que el admin está auditando
+        let allExpenses = [];
+        let unsubscribe = null;
+
+        // Configuración de Perfiles
+        const PROFILES = [
+            { id: 1, name: 'Admin Casa', role: 'admin', pin: '1234', color: 'bg-slate-800' },
+            { id: 2, name: 'Usuario 2', role: 'user', pin: '0000', color: 'bg-emerald-600' },
+            { id: 3, name: 'Usuario 3', role: 'user', pin: '0000', color: 'bg-blue-600' },
+            { id: 4, name: 'Usuario 4', role: 'user', pin: '0000', color: 'bg-purple-600' }
+        ];
+
+        // Iconos automáticos según nombre
+        const ICONS_MAP = {
+            'luz': 'fa-lightbulb', 'agua': 'fa-faucet', 'gas': 'fa-fire',
+            'internet': 'fa-wifi', 'wifi': 'fa-wifi', 'celular': 'fa-mobile-alt',
+            'plan': 'fa-mobile-alt', 'netflix': 'fa-tv', 'spotify': 'fa-music',
+            'arriendo': 'fa-home', 'casa': 'fa-home', 'gc': 'fa-building',
+            'super': 'fa-shopping-cart', 'comida': 'fa-utensils', 'auto': 'fa-car',
+            'bencina': 'fa-gas-pump', 'tarjeta': 'fa-credit-card'
+        };
+
+        // --- FUNCIONES GLOBALES (Expuestas al HTML) ---
+
+        window.attemptLogin = async () => {
+            const userId = parseInt(document.getElementById('loginUser').value);
+            const pin = document.getElementById('loginPin').value;
+            const profile = PROFILES.find(p => p.id === userId);
+
+            if (profile && profile.pin === pin) {
+                document.getElementById('login-loader').classList.remove('hidden');
+                try {
+                    if(auth) await signInAnonymously(auth);
+                    currentUserProfile = profile;
+                    initAppUI();
+                } catch (error) {
+                    showToast("Error Conexión: " + error.message);
+                }
+            } else {
+                showToast("PIN Incorrecto");
+            }
+        };
+
+        window.logout = () => {
+            currentUserProfile = null;
+            viewMode = 'personal';
+            viewingUserId = null;
+            if(unsubscribe) unsubscribe();
+            if(auth) auth.signOut();
+            document.getElementById('view-app').classList.add('hidden-view');
+            document.getElementById('view-login').classList.remove('hidden-view');
+            document.getElementById('loginPin').value = '';
+            document.getElementById('login-loader').classList.add('hidden');
+        };
+
+        window.addExpense = async () => {
+            const nameEl = document.getElementById('inputName');
+            const amountEl = document.getElementById('inputAmount');
+            const btn = document.getElementById('btnAdd');
+
+            const name = nameEl.value.trim();
+            const amount = parseInt(amountEl.value);
+            
+            // Si el admin está viendo a otro usuario, el gasto se agrega a ESE usuario
+            const targetUserId = (viewMode === 'admin-viewing-user') ? viewingUserId : currentUserProfile.id;
+            const targetUserName = PROFILES.find(p => p.id === targetUserId).name;
+
+            if (!name || isNaN(amount) || amount <= 0) {
+                showToast("Datos inválidos");
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i>';
+
+            try {
+                await addDoc(collection(db, "gastos"), {
+                    userId: targetUserId,
+                    userName: targetUserName,
+                    name: name,
+                    amount: amount,
+                    paid: false,
+                    createdAt: Date.now()
+                });
+                
+                nameEl.value = '';
+                amountEl.value = '';
+                showToast("Agregado exitosamente");
+            } catch (e) {
+                showToast("Error: " + e.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<span>Guardar</span> <i class="fas fa-paper-plane text-xs"></i>';
+            }
+        };
+
+        window.togglePaid = async (docId, currentStatus) => {
+            try {
+                const expenseRef = doc(db, "gastos", docId);
+                await updateDoc(expenseRef, { paid: !currentStatus });
+            } catch (e) { showToast("Error al actualizar"); }
+        };
+
+        window.deleteExpense = async (docId) => {
+            if(confirm("¿Eliminar este gasto permanentemente?")) {
+                try {
+                    await deleteDoc(doc(db, "gastos", docId));
+                    showToast("Gasto eliminado");
+                } catch (e) { showToast("Error al borrar"); }
+            }
+        };
+
+        window.resetMonth = async () => {
+            if(!confirm("⚠️ ¿INICIAR MES NUEVO?\n\nEsto desmarcará todos los gastos pagados de TODA la casa.")) return;
+            showToast("Procesando...");
+            try {
+                const q = query(collection(db, "gastos"));
+                const querySnapshot = await getDocs(q);
+                const batch = writeBatch(db);
+                querySnapshot.forEach((doc) => batch.update(doc.ref, { paid: false }));
+                await batch.commit();
+                showToast("¡Nuevo mes iniciado!");
+            } catch (e) { showToast("Error: " + e.message); }
+        };
+
+        // Función Admin: Ver detalles de un usuario
+        window.viewUserDetails = (userId) => {
+            viewMode = 'admin-viewing-user';
+            viewingUserId = userId;
+            renderApp(); // Re-renderizar UI
+            showToast(`Viendo a ${PROFILES.find(p=>p.id===userId).name}`);
+        };
+
+        window.showAdminView = () => {
+            viewMode = 'personal';
+            viewingUserId = null;
+            renderApp();
+        };
+
+        // --- LÓGICA DE UI ---
+
+        function initAppUI() {
+            document.getElementById('view-login').classList.add('hidden-view');
+            document.getElementById('view-app').classList.remove('hidden-view');
+            
+            document.getElementById('navUsername').textContent = currentUserProfile.name;
+            document.getElementById('navAvatar').textContent = currentUserProfile.name.charAt(0);
+            document.getElementById('navAvatar').className = `w-10 h-10 rounded-full text-white flex items-center justify-center font-bold text-lg shadow-md ${currentUserProfile.color}`;
+
+            // Controles de Admin
+            const adminPanel = document.getElementById('admin-panel');
+            const adminControls = document.getElementById('admin-controls');
+            
+            if (currentUserProfile.role === 'admin') {
+                adminPanel.classList.remove('hidden-view');
+                adminControls.classList.remove('hidden-view');
+            } else {
+                adminPanel.classList.add('hidden-view');
+                adminControls.classList.add('hidden-view');
+            }
+
+            listenToData();
+        }
+
+        function listenToData() {
+            const loader = document.getElementById('loading-indicator');
+            loader.classList.remove('hidden');
+
+            const q = query(collection(db, "gastos"));
+            
+            unsubscribe = onSnapshot(q, (snapshot) => {
+                allExpenses = [];
+                snapshot.forEach((doc) => {
+                    allExpenses.push({ id: doc.id, ...doc.data() });
+                });
+                loader.classList.add('hidden');
+                renderApp();
+            });
+        }
+
+        function renderApp() {
+            // 1. Si soy Admin, calcular resumen general
+            if (currentUserProfile.role === 'admin') {
+                renderAdminStats();
+            }
+
+            // 2. Determinar qué lista mostrar en el panel "Personal"
+            let targetUserId = currentUserProfile.id;
+            let cardTitle = "Mis Gastos";
+            let themeClass = "bg-user"; 
+            let showBackBtn = false;
+
+            // Lógica de "Modo Auditoría" del Admin
+            if (viewMode === 'admin-viewing-user') {
+                targetUserId = viewingUserId;
+                const targetUser = PROFILES.find(p => p.id === targetUserId);
+                cardTitle = `Gastos de ${targetUser.name}`;
+                themeClass = "bg-slate-700"; // Color diferente para indicar modo auditoría
+                showBackBtn = true;
+                
+                // Ocultar el resto del panel admin para enfocar
+                document.getElementById('admin-panel').classList.add('hidden-view');
+            } else if (currentUserProfile.role === 'admin') {
+                // Admin viendo sus propios gastos
+                 document.getElementById('admin-panel').classList.remove('hidden-view');
+                 themeClass = "bg-white border border-slate-200"; // Estilo neutro
+            }
+
+            // Renderizar la tarjeta principal y lista
+            renderExpensePanel(targetUserId, cardTitle, themeClass, showBackBtn);
+        }
+
+        function renderExpensePanel(userId, title, themeClass, showBackBtn) {
+            const backBtn = document.getElementById('btnBackToAdmin');
+            if (showBackBtn) backBtn.classList.remove('hidden-view');
+            else backBtn.classList.add('hidden-view');
+
+            const card = document.getElementById('personalCard');
+            // Resetear clases y aplicar las nuevas (manejo manual para evitar conflictos)
+            card.className = `p-6 rounded-3xl shadow-lg mb-6 transition-all duration-300 ${themeClass}`;
+            
+            // Ajustar colores de texto según el tema (Fondo blanco vs Fondo oscuro)
+            const isWhiteBg = themeClass.includes('bg-white');
+            const textColor = isWhiteBg ? 'text-slate-800' : 'text-white';
+            const subTextColor = isWhiteBg ? 'text-slate-400' : 'text-white/80';
+            
+            document.getElementById('personalCardTitle').className = `${subTextColor} text-xs font-bold uppercase tracking-widest`;
+            document.getElementById('personalCardTitle').textContent = title;
+            document.getElementById('myTotal').className = `text-4xl font-extrabold mt-1 ${textColor}`;
+            document.getElementById('myProgressText').className = `text-right text-[10px] mt-1 ${subTextColor}`;
+
+            // Filtrar y Calcular
+            const userExpenses = allExpenses.filter(e => e.userId === userId);
+            const total = userExpenses.reduce((s, e) => s + e.amount, 0);
+            const paid = userExpenses.filter(e => e.paid).reduce((s, e) => s + e.amount, 0);
+            const pending = total - paid;
+
+            document.getElementById('myTotal').textContent = formatMoney(total);
+            document.getElementById('myPendingBadge').textContent = `Deuda: ${formatMoney(pending)}`;
+            
+            const percent = total > 0 ? (paid/total)*100 : 0;
+            const progressBar = document.getElementById('myProgressBar');
+            progressBar.style.width = `${percent}%`;
+            progressBar.className = `absolute top-0 left-0 h-full rounded-full transition-all duration-700 ease-out ${isWhiteBg ? 'bg-slate-800' : 'bg-white'}`;
+            document.getElementById('myProgressText').textContent = `${Math.round(percent)}% Pagado`;
+
+            // Renderizar Lista
+            const list = document.getElementById('expensesList');
+            list.innerHTML = '';
+            
+            // Ordenar: Pendientes primero, luego pagados
+            userExpenses.sort((a,b) => a.paid - b.paid);
+
+            if (userExpenses.length === 0) {
+                list.innerHTML = `<div class="text-center py-10 text-slate-400 text-sm bg-white rounded-2xl border border-dashed border-slate-200">
+                    <i class="fas fa-receipt text-2xl mb-2 opacity-50"></i><br>Sin movimientos registrados
+                </div>`;
+                return;
+            }
+
+            userExpenses.forEach(exp => {
+                const el = document.createElement('div');
+                const isPaid = exp.paid;
+                
+                // Buscar icono
+                let iconClass = 'fa-tag';
+                const lowerName = exp.name.toLowerCase();
+                for (const [key, val] of Object.entries(ICONS_MAP)) {
+                    if (lowerName.includes(key)) { iconClass = val; break; }
+                }
+
+                // Estilos dinámicos
+                const bgItem = isPaid ? 'bg-emerald-50 border-emerald-200' : 'bg-white border-slate-100';
+                const textItem = isPaid ? 'text-emerald-700' : 'text-slate-700';
+                const opacityItem = isPaid ? 'opacity-75' : 'opacity-100';
+
+                el.className = `flex justify-between items-center p-4 rounded-2xl shadow-sm border ${bgItem} ${opacityItem} transition-all duration-200 hover:shadow-md`;
+                
+                // Lógica de borrado: Admin puede borrar todo, User solo lo suyo
+                const canDelete = (currentUserProfile.role === 'admin') || (exp.userId === currentUserProfile.id);
+                const deleteBtn = canDelete ? 
+                    `<button onclick="deleteExpense('${exp.id}')" class="w-8 h-8 rounded-full hover:bg-red-50 text-slate-300 hover:text-red-500 transition"><i class="fas fa-trash-alt text-xs"></i></button>` : '';
+
+                el.innerHTML = `
+                    <div class="flex items-center gap-4 flex-grow cursor-pointer group" onclick="togglePaid('${exp.id}', ${isPaid})">
+                        <div class="w-10 h-10 rounded-full flex items-center justify-center ${isPaid ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-slate-400 group-hover:bg-blue-50 group-hover:text-blue-500'} transition-colors">
+                            <i class="fas ${isPaid ? 'fa-check' : iconClass}"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-sm ${textItem} ${isPaid ? 'line-through decoration-emerald-500' : ''}">${exp.name}</h4>
+                            <p class="text-xs font-mono font-semibold text-slate-400">${formatMoney(exp.amount)}</p>
+                        </div>
+                    </div>
+                    ${deleteBtn}
                 `;
-                listContainer.appendChild(item);
+                list.appendChild(el);
+            });
+        }
+
+        function renderAdminStats() {
+            const list = document.getElementById('usersSummaryList');
+            list.innerHTML = '';
+            
+            let grandTotal = 0;
+            let grandPaid = 0;
+
+            PROFILES.forEach(profile => {
+                const uExps = allExpenses.filter(e => e.userId === profile.id);
+                const uTotal = uExps.reduce((s, e) => s + e.amount, 0);
+                const uPaid = uExps.filter(e => e.paid).reduce((s, e) => s + e.amount, 0);
+                
+                grandTotal += uTotal;
+                grandPaid += uPaid;
+
+                const card = document.createElement('div');
+                card.className = "bg-white p-4 rounded-2xl shadow-sm border border-slate-100 cursor-pointer hover:border-blue-300 hover:shadow-md transition-all group card-hover";
+                card.onclick = () => viewUserDetails(profile.id); // ACCIÓN CLAVE: Ver detalles
+
+                card.innerHTML = `
+                    <div class="flex justify-between items-center mb-2">
+                        <div class="flex items-center gap-2">
+                            <div class="w-6 h-6 rounded-full ${profile.color} text-white text-[10px] flex items-center justify-center font-bold">
+                                ${profile.name.charAt(0)}
+                            </div>
+                            <span class="text-xs font-bold text-slate-600 uppercase">${profile.name.split(' ')[0]}</span>
+                        </div>
+                        <i class="fas fa-chevron-right text-[10px] text-slate-300 group-hover:text-blue-500"></i>
+                    </div>
+                    <p class="text-lg font-bold text-slate-800 mb-1">${formatMoney(uTotal)}</p>
+                    <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                        <div class="bg-blue-500 h-1.5 rounded-full" style="width: ${uTotal > 0 ? (uPaid/uTotal)*100 : 0}%"></div>
+                    </div>
+                `;
+                list.appendChild(card);
             });
 
-            updateSummary();
+            document.getElementById('houseTotal').textContent = formatMoney(grandTotal);
+            document.getElementById('housePending').textContent = formatMoney(grandTotal - grandPaid);
+            document.getElementById('housePaid').textContent = formatMoney(grandPaid);
         }
 
-        // 9. Actualizar Totales y Barra
-        function updateSummary() {
-            const totalDebt = expenses.reduce((sum, item) => sum + item.amount, 0);
-            const totalPaid = expenses.filter(i => i.paid).reduce((sum, item) => sum + item.amount, 0);
-            const totalPending = totalDebt - totalPaid;
-
-            document.getElementById('totalDebt').textContent = formatMoney(totalDebt);
-            document.getElementById('totalPending').textContent = formatMoney(totalPending);
-
-            // Calcular porcentaje para la barra
-            let percent = 0;
-            if (totalDebt > 0) {
-                percent = Math.round((totalPaid / totalDebt) * 100);
-            }
-
-            document.getElementById('progressBar').style.width = `${percent}%`;
-            document.getElementById('percentText').textContent = `${percent}%`;
-
-            // Cambiar color de barra si se completa
-            const bar = document.getElementById('progressBar');
-            if(percent === 100) {
-                bar.classList.remove('bg-green-500');
-                bar.classList.add('bg-blue-400');
-                showToast("¡Felicidades! Mes completado.");
-            } else {
-                bar.classList.add('bg-green-500');
-                bar.classList.remove('bg-blue-400');
-            }
+        // --- UTILIDADES ---
+        function formatMoney(val) {
+            return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(val);
         }
 
-        // Utilidad: Mostrar mensaje toast
         function showToast(msg) {
-            const toast = document.getElementById('toast');
-            toast.textContent = msg;
-            toast.style.opacity = '1';
-            setTimeout(() => { toast.style.opacity = '0'; }, 3000);
+            const t = document.getElementById('toast');
+            document.getElementById('toastMsg').textContent = msg;
+            t.classList.remove('opacity-0', 'translate-y-[-20px]');
+            setTimeout(() => t.classList.add('opacity-0', 'translate-y-[-20px]'), 3000);
         }
-
     </script>
 </body>
 </html>
