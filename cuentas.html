@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Cuentas Mensuales</title>
+    <!-- Tailwind CSS para diseño -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Iconos -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Fuente -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Poppins', sans-serif; background-color: #f3f4f6; }
+        
+        .card-summary {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: white;
+        }
+
+        .expense-item {
+            transition: all 0.3s ease;
+        }
+
+        /* Estilo cuando está pagado */
+        .expense-item.paid {
+            background-color: #f0fdf4; /* Fondo verde muy claro */
+            border-left: 5px solid #22c55e; /* Borde verde */
+            opacity: 0.7;
+        }
+        
+        .expense-item.paid h3 {
+            text-decoration: line-through;
+            color: #86efac;
+        }
+
+        /* Estilo cuando está pendiente */
+        .expense-item.pending {
+            background-color: white;
+            border-left: 5px solid #ef4444; /* Borde rojo */
+        }
+
+        .checkbox-custom {
+            width: 25px;
+            height: 25px;
+            cursor: pointer;
+            accent-color: #22c55e;
+        }
+    </style>
+</head>
+<body class="pb-12">
+
+    <!-- Encabezado Resumen -->
+    <div class="card-summary p-6 rounded-b-3xl shadow-lg sticky top-0 z-20">
+        <div class="flex justify-between items-center mb-4">
+            <h1 class="text-xl font-light">Resumen Mensual</h1>
+            <button onclick="confirmResetMonth()" class="text-xs bg-white/20 hover:bg-white/30 px-3 py-1 rounded-full text-white transition">
+                <i class="fas fa-sync-alt"></i> Nuevo Mes
+            </button>
+        </div>
+
+        <div class="flex justify-between items-end mb-2">
+            <div>
+                <p class="text-sm text-gray-400">Por Pagar</p>
+                <p id="totalPending" class="text-3xl font-bold text-red-400">$0</p>
+            </div>
+            <div class="text-right">
+                <p class="text-sm text-gray-400">Total Gastos</p>
+                <p id="totalDebt" class="text-xl font-semibold">$0</p>
+            </div>
+        </div>
+
+        <!-- Barra de Progreso -->
+        <div class="w-full bg-gray-700 rounded-full h-4 mt-2 relative overflow-hidden">
+            <div id="progressBar" class="bg-green-500 h-4 rounded-full transition-all duration-500" style="width: 0%"></div>
+        </div>
+        <p class="text-xs text-right mt-1 text-gray-400">Pagado: <span id="percentText">0%</span></p>
+    </div>
+
+    <main class="p-5 max-w-xl mx-auto">
+        
+        <!-- Formulario de Agregar -->
+        <div class="bg-white p-4 rounded-xl shadow-sm mb-6 border border-gray-100">
+            <h2 class="text-gray-700 font-semibold mb-3 text-sm uppercase tracking-wide">Agregar Nuevo Gasto</h2>
+            <div class="flex gap-2 mb-2">
+                <input type="text" id="inputName" placeholder="Nombre (ej: Arriendo)" class="flex-grow p-3 bg-gray-50 rounded-lg border border-gray-200 outline-none focus:border-blue-500">
+            </div>
+            <div class="flex gap-2">
+                <input type="number" id="inputAmount" placeholder="Monto" class="flex-grow p-3 bg-gray-50 rounded-lg border border-gray-200 outline-none focus:border-blue-500">
+                <button onclick="addExpense()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 rounded-lg font-bold shadow-md transition">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Lista de Gastos -->
+        <div id="expenseList" class="space-y-3">
+            <!-- Aquí se inyectan los gastos -->
+            <div class="text-center text-gray-400 py-10">
+                <i class="fas fa-wallet text-4xl mb-3 opacity-30"></i>
+                <p>No tienes gastos registrados.</p>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Notificación Flotante -->
+    <div id="toast" class="fixed bottom-5 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg text-sm opacity-0 transition-opacity duration-300 pointer-events-none">
+        Acción realizada
+    </div>
+
+    <script>
+        // --- LÓGICA DE LA APLICACIÓN ---
+
+        let expenses = [];
+
+        // 1. Cargar datos al iniciar
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedData = localStorage.getItem('myExpensesApp');
+            if (savedData) {
+                expenses = JSON.parse(savedData);
+                renderExpenses();
+            }
+        });
+
+        // 2. Guardar datos
+        function saveData() {
+            localStorage.setItem('myExpensesApp', JSON.stringify(expenses));
+            updateSummary();
+        }
+
+        // 3. Formato Moneda (CLP)
+        const formatMoney = (amount) => {
+            return new Intl.NumberFormat('es-CL', {
+                style: 'currency',
+                currency: 'CLP',
+                maximumFractionDigits: 0
+            }).format(amount);
+        };
+
+        // 4. Agregar Gasto
+        function addExpense() {
+            const nameInput = document.getElementById('inputName');
+            const amountInput = document.getElementById('inputAmount');
+            
+            const name = nameInput.value.trim();
+            const amount = parseInt(amountInput.value);
+
+            if (!name || isNaN(amount) || amount <= 0) {
+                showToast("Por favor ingresa un nombre y un monto válido.");
+                return;
+            }
+
+            const newExpense = {
+                id: Date.now(),
+                name: name,
+                amount: amount,
+                paid: false
+            };
+
+            expenses.push(newExpense);
+            saveData();
+            renderExpenses();
+            
+            // Limpiar inputs
+            nameInput.value = '';
+            amountInput.value = '';
+            nameInput.focus();
+            showToast("Gasto agregado correctamente");
+        }
+
+        // 5. Borrar Gasto
+        function deleteExpense(id) {
+            if(confirm("¿Estás seguro de borrar este gasto permanentemente?")) {
+                expenses = expenses.filter(exp => exp.id !== id);
+                saveData();
+                renderExpenses();
+                showToast("Gasto eliminado");
+            }
+        }
+
+        // 6. Cambiar Estado (Pagado / No Pagado)
+        function toggleStatus(id) {
+            const expense = expenses.find(exp => exp.id === id);
+            if (expense) {
+                expense.paid = !expense.paid;
+                saveData();
+                renderExpenses();
+                
+                // Efecto de vibración si está en móvil
+                if (navigator.vibrate) navigator.vibrate(50);
+            }
+        }
+
+        // 7. Reiniciar Mes (Pone todo en "No Pagado")
+        function confirmResetMonth() {
+            if(expenses.length === 0) return;
+            
+            if(confirm("¿Empezó un nuevo mes? Esto marcará todas las cuentas como 'No Pagadas', pero NO las borrará.")) {
+                expenses.forEach(exp => exp.paid = false);
+                saveData();
+                renderExpenses();
+                showToast("¡Nuevo mes iniciado! A pagar...");
+            }
+        }
+
+        // 8. Renderizar (Dibujar) la lista
+        function renderExpenses() {
+            const listContainer = document.getElementById('expenseList');
+            listContainer.innerHTML = '';
+
+            // Ordenar: Primero los pendientes, luego los pagados
+            expenses.sort((a, b) => a.paid - b.paid);
+
+            if (expenses.length === 0) {
+                listContainer.innerHTML = `
+                    <div class="text-center text-gray-400 py-10">
+                        <i class="fas fa-wallet text-4xl mb-3 opacity-30"></i>
+                        <p>Agrega tus gastos fijos aquí.</p>
+                    </div>`;
+                updateSummary();
+                return;
+            }
+
+            expenses.forEach(exp => {
+                const item = document.createElement('div');
+                // Clases dinámicas según estado
+                item.className = `expense-item ${exp.paid ? 'paid' : 'pending'} flex items-center justify-between p-4 rounded-lg shadow-sm bg-white mb-3`;
+                
+                item.innerHTML = `
+                    <div class="flex items-center gap-4 flex-grow" onclick="toggleStatus(${exp.id})">
+                        <div class="relative">
+                            <input type="checkbox" ${exp.paid ? 'checked' : ''} class="checkbox-custom pointer-events-none">
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-gray-800 ${exp.paid ? 'line-through text-gray-400' : ''}">${exp.name}</h3>
+                            <p class="text-sm ${exp.paid ? 'text-green-600 font-bold' : 'text-gray-500'}">
+                                ${exp.paid ? 'PAGADO' : formatMoney(exp.amount)}
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <button onclick="deleteExpense(${exp.id})" class="text-gray-300 hover:text-red-500 p-2 transition">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                `;
+                listContainer.appendChild(item);
+            });
+
+            updateSummary();
+        }
+
+        // 9. Actualizar Totales y Barra
+        function updateSummary() {
+            const totalDebt = expenses.reduce((sum, item) => sum + item.amount, 0);
+            const totalPaid = expenses.filter(i => i.paid).reduce((sum, item) => sum + item.amount, 0);
+            const totalPending = totalDebt - totalPaid;
+
+            document.getElementById('totalDebt').textContent = formatMoney(totalDebt);
+            document.getElementById('totalPending').textContent = formatMoney(totalPending);
+
+            // Calcular porcentaje para la barra
+            let percent = 0;
+            if (totalDebt > 0) {
+                percent = Math.round((totalPaid / totalDebt) * 100);
+            }
+
+            document.getElementById('progressBar').style.width = `${percent}%`;
+            document.getElementById('percentText').textContent = `${percent}%`;
+
+            // Cambiar color de barra si se completa
+            const bar = document.getElementById('progressBar');
+            if(percent === 100) {
+                bar.classList.remove('bg-green-500');
+                bar.classList.add('bg-blue-400');
+                showToast("¡Felicidades! Mes completado.");
+            } else {
+                bar.classList.add('bg-green-500');
+                bar.classList.remove('bg-blue-400');
+            }
+        }
+
+        // Utilidad: Mostrar mensaje toast
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.style.opacity = '1';
+            setTimeout(() => { toast.style.opacity = '0'; }, 3000);
+        }
+
+    </script>
+</body>
+</html>
