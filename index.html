@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gastos Dúo (Test)</title>
+    <title>Finanzas Casa</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
         body { font-family: 'Outfit', sans-serif; background-color: #f8fafc; }
@@ -15,433 +16,501 @@
         .hidden-view { display: none !important; }
         .hide-scroll::-webkit-scrollbar { display: none; }
         
-        /* SEMÁFORO ESTADOS (Tu Lógica) */
-        .card-red { background: white; border-left: 6px solid #ef4444; }      /* Nada */
-        .card-blue { background: #eff6ff; border-left: 6px solid #3b82f6; }    /* Azul: Falta Reembolso (Espera) */
-        .card-yellow { background: #fffbeb; border-left: 6px solid #f59e0b; }  /* Amarillo: Falta Pagar Cta (Alerta) */
-        .card-green { background: #f0fdf4; border-left: 6px solid #22c55e; opacity: 0.7; } /* Verde: Listo */
+        /* Barras de Presupuesto */
+        .progress-bar { transition: width 1s cubic-bezier(0.4, 0, 0.2, 1); }
+        .bg-p-green { background-color: #10b981; }
+        .bg-p-yellow { background-color: #f59e0b; }
+        .bg-p-red { background-color: #ef4444; }
 
-        /* Badges */
+        /* Colores Sync */
+        .sync-red { background: white; border-left: 6px solid #ef4444; }
         .badge-red { background: #fee2e2; color: #991b1b; }
-        .badge-blue { background: #dbeafe; color: #1e40af; }
+        .sync-yellow { background: #fffbeb; border-left: 6px solid #f59e0b; }
         .badge-yellow { background: #fef3c7; color: #92400e; }
+        .sync-green { background: #f0fdf4; border-left: 6px solid #22c55e; opacity: 0.8; }
         .badge-green { background: #dcfce7; color: #166534; }
 
-        /* Botones Check */
-        .check-btn { transition: all 0.2s; cursor: pointer; }
-        .check-btn:active { transform: scale(0.95); }
-        .check-active { background-color: #22c55e; border-color: #22c55e; color: white; }
-        .check-inactive { background-color: white; border-color: #cbd5e1; color: #94a3b8; }
+        /* Tarjeta Personal */
+        .card-personal { cursor: pointer; transition: all 0.2s; border: 2px solid transparent; }
+        .card-personal:active { transform: scale(0.97); }
+        .card-personal-pending { background: white; border-color: #e2e8f0; }
+        .card-personal-done { background: #dcfce7; border-color: #22c55e; color: #14532d; }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen text-slate-800">
+<body class="bg-slate-100 min-h-screen text-slate-800">
 
-    <!-- LOGIN (OCULTO) -->
-    <div id="view-login" class="hidden flex-col items-center justify-center min-h-screen p-6"></div>
+    <!-- LOGIN -->
+    <div id="view-login" class="flex flex-col items-center justify-center min-h-screen p-6 fade-in">
+        <div class="bg-white p-8 rounded-3xl shadow-xl w-full max-w-sm text-center border border-slate-100">
+            <div class="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                <i class="fas fa-home text-4xl text-indigo-600"></i>
+            </div>
+            <h1 class="text-3xl font-extrabold text-slate-800 mb-2">Finanzas Casa</h1>
+            <p class="text-slate-400 text-sm mb-8">Control y Transparencia</p>
+            <button onclick="loginWithGoogle()" class="w-full bg-white border border-slate-300 text-slate-700 font-bold py-4 rounded-xl shadow-sm hover:bg-slate-50 flex items-center justify-center gap-3 transition active:scale-95 group">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-6 h-6 group-hover:scale-110 transition">
+                Entrar con Google
+            </button>
+            <p id="login-error" class="text-red-500 text-xs mt-4 font-bold hidden"></p>
+        </div>
+    </div>
 
     <!-- APP PRINCIPAL -->
-    <div id="view-app" class="pb-32 fade-in">
+    <div id="view-app" class="hidden-view pb-32 fade-in">
         
         <!-- Navbar -->
         <nav class="bg-white sticky top-0 z-30 px-5 py-4 shadow-sm border-b border-slate-100 flex justify-between items-center">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold border-2 border-indigo-200">
-                    V
-                </div>
+                <img id="userPhoto" src="" class="w-10 h-10 rounded-full border-2 border-slate-200">
                 <div class="leading-tight">
-                    <p class="text-[10px] uppercase font-bold text-green-500 flex items-center gap-1">
-                        <i class="fas fa-wifi"></i> Online
-                    </p>
-                    <p id="userName" class="font-bold text-slate-800 text-sm">Vicente</p>
+                    <p class="text-[10px] uppercase font-bold text-slate-400">Hola</p>
+                    <p id="userName" class="font-bold text-slate-800 text-sm">Usuario</p>
                 </div>
             </div>
-            <div class="bg-slate-100 rounded-lg px-2 py-1">
-                <input type="month" id="monthSelector" class="bg-transparent text-xs font-bold text-slate-600 outline-none cursor-pointer" onchange="changeMonth()">
+            <div class="flex items-center gap-2">
+                <button onclick="exportTextReport()" class="w-9 h-9 rounded-full bg-slate-800 text-white hover:bg-black flex items-center justify-center transition shadow-lg" title="Descargar Reporte">
+                    <i class="fas fa-file-alt text-xs"></i>
+                </button>
+                <div class="bg-slate-100 rounded-lg px-2 py-1">
+                    <input type="month" id="monthSelector" class="bg-transparent text-xs font-bold text-slate-600 outline-none cursor-pointer" onchange="changeMonth()">
+                </div>
             </div>
         </nav>
 
-        <main class="p-5 max-w-2xl mx-auto space-y-6">
+        <main class="p-5 max-w-6xl mx-auto space-y-6">
 
-            <!-- 1. RESUMEN DEUDA -->
-            <div id="debtCard" class="bg-slate-800 p-6 rounded-3xl shadow-lg text-white relative overflow-hidden transition-all">
-                <div class="flex justify-between items-start z-10 relative">
-                    <div>
-                        <p class="text-indigo-300 text-xs font-bold uppercase tracking-widest mb-1">Carlos te debe</p>
-                        <h2 class="text-4xl font-extrabold" id="debtAmount">$0</h2>
-                    </div>
-                    <div class="text-right">
-                        <span class="bg-white/10 px-3 py-1 rounded-full text-[10px] font-bold uppercase backdrop-blur-md text-indigo-100">
-                            Por cobrar
-                        </span>
-                    </div>
+            <!-- 1. METAS (PRESUPUESTO) -->
+            <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 relative overflow-hidden">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest"><i class="fas fa-bullseye mr-1"></i> Metas Mensuales</h3>
+                    <button id="btnAddBudget" onclick="addBudget()" class="text-[10px] bg-slate-100 px-2 py-1 rounded text-blue-600 font-bold hover:bg-blue-50">+ Meta</button>
+                </div>
+                <div id="budgetsContainer" class="space-y-4">
+                    <div class="text-center py-2 text-xs text-slate-300">Cargando...</div>
                 </div>
             </div>
 
-            <!-- 2. FORMULARIO CON MEMORIA -->
-            <div id="actionPanel" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 relative z-10">
+            <!-- 2. FORMULARIO -->
+            <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 relative z-10">
                 <div class="flex justify-between items-center mb-3">
                     <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Nuevo Gasto</p>
-                    <span id="loadingDefaults" class="text-[10px] text-blue-500 animate-pulse hidden">Cargando precios...</span>
+                    <span id="loadingDefaults" class="text-[10px] text-blue-500 animate-pulse hidden">Actualizando...</span>
                 </div>
                 
-                <!-- Botones Dinámicos -->
-                <div id="quickButtonsContainer" class="flex gap-2 overflow-x-auto hide-scroll mb-4 pb-1"></div>
+                <div id="smartButtons" class="flex gap-2 overflow-x-auto hide-scroll mb-4 pb-1"></div>
 
-                <div class="flex gap-3 mb-3">
-                    <input type="text" id="inputName" placeholder="Concepto" class="w-full p-3 bg-slate-50 rounded-xl font-bold text-slate-700 outline-none text-sm focus:bg-white focus:ring-2 focus:ring-indigo-100 transition">
-                    <input type="number" id="inputAmount" placeholder="$ Total" class="w-1/3 p-3 bg-slate-50 rounded-xl font-bold text-slate-700 outline-none text-center text-sm focus:bg-white focus:ring-2 focus:ring-indigo-100 transition">
-                </div>
-                
-                <!-- Selector Tipo -->
-                <div class="flex gap-2 mb-3 bg-slate-50 p-1 rounded-xl">
-                    <label class="flex-1 cursor-pointer">
-                        <input type="radio" name="expType" value="house" checked class="peer sr-only">
-                        <div class="py-2 text-center text-xs font-bold text-slate-400 rounded-lg peer-checked:bg-white peer-checked:text-indigo-600 peer-checked:shadow-sm transition">
-                            🏠 Compartido (50%)
+                <div class="flex flex-col md:flex-row gap-3">
+                    <div class="flex-grow flex gap-3">
+                        <input type="text" id="inputName" placeholder="Concepto" class="w-full p-3 bg-slate-50 rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-indigo-100 transition">
+                        <input type="number" id="inputAmount" placeholder="$ Total" class="w-1/3 p-3 bg-slate-50 rounded-xl font-bold text-center text-sm outline-none focus:ring-2 focus:ring-indigo-100 transition">
+                    </div>
+                    
+                    <div class="flex gap-2">
+                        <div class="bg-slate-100 p-1 rounded-xl flex">
+                            <!-- Solo Vicho y Carlos pueden marcar "Casa" -->
+                            <button onclick="setType('house')" id="btnTypeHouse" class="px-4 py-2 rounded-lg text-xs font-bold bg-white shadow-sm text-indigo-600 transition flex items-center gap-1"><i class="fas fa-home"></i> Casa</button>
+                            <button onclick="setType('personal')" id="btnTypePersonal" class="px-4 py-2 rounded-lg text-xs font-bold text-slate-400 hover:text-slate-600 transition flex items-center gap-1"><i class="fas fa-user"></i> Mío</button>
                         </div>
-                    </label>
-                    <label class="flex-1 cursor-pointer">
-                        <input type="radio" name="expType" value="personal" class="peer sr-only">
-                        <div class="py-2 text-center text-xs font-bold text-slate-400 rounded-lg peer-checked:bg-white peer-checked:text-emerald-600 peer-checked:shadow-sm transition">
-                            👤 Solo Mío
-                        </div>
-                    </label>
+                        <button onclick="saveExpense()" class="bg-slate-900 text-white px-6 py-2 rounded-xl font-bold text-sm hover:bg-black transition shadow-lg active:scale-95">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
                 </div>
-
-                <button id="saveBtn" onclick="saveExpense()" class="w-full bg-slate-900 text-white py-3 rounded-xl font-bold hover:bg-black transition shadow-lg active:scale-95">Guardar</button>
+                <input type="hidden" id="currentType" value="house">
+                <input type="hidden" id="currentCategory" value="General">
             </div>
 
-            <!-- 3. LISTA DE MOVIMIENTOS -->
-            <div id="expensesContainer" class="space-y-4 pb-10"></div>
+            <!-- 3. VISTA DIVIDIDA -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                
+                <!-- IZQUIERDA: ESTADO DE CUENTAS (Visible para TODOS) -->
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between px-2">
+                        <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-slate-400"></span> Estado del Hogar
+                        </h3>
+                        <span class="text-xs font-mono font-bold text-slate-400" id="totalHouse">$0</span>
+                    </div>
+                    <div id="houseList" class="space-y-3"></div>
+                </div>
+
+                <!-- DERECHA: MIS PAGOS (Editable solo por mí) -->
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between px-2">
+                        <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Mis Pagos
+                        </h3>
+                        <span class="text-xs font-mono font-bold text-emerald-600" id="totalPersonal">$0</span>
+                    </div>
+                    <div id="personalList" class="space-y-3"></div>
+                </div>
+
+            </div>
 
         </main>
     </div>
 
-    <!-- ALERTA DE ERROR (Visible si falla) -->
-    <div id="errorAlert" class="hidden fixed bottom-5 left-5 right-5 bg-red-600 text-white p-4 rounded-2xl shadow-2xl z-50 text-xs font-mono">
-        <p class="font-bold mb-1">⚠️ ERROR DE CONEXIÓN:</p>
-        <span id="errorMsg">...</span>
-    </div>
-
-    <!-- TOAST -->
     <div id="toast" class="fixed top-6 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-6 py-3 rounded-full shadow-2xl text-xs font-bold opacity-0 transition-all pointer-events-none z-50 -translate-y-4 flex items-center gap-2">
         <span id="toastMsg">Mensaje</span>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, where, doc, updateDoc, deleteDoc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        
+        import { getFirestore, collection, addDoc, onSnapshot, query, where, doc, updateDoc, deleteDoc, setDoc, getDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
         // ==========================================
-        // 1. TUS CREDENCIALES (¡PEGA AQUÍ!)
+        // 1. CREDENCIALES
         // ==========================================
         const firebaseConfig = {
-  apiKey: "AIzaSyALsMoeqqLpQge9hMocUHSjmqnpJXNJ9p4",
-  authDomain: "control-mensual-ae833.firebaseapp.com",
-  projectId: "control-mensual-ae833",
-  storageBucket: "control-mensual-ae833.firebasestorage.app",
-  messagingSenderId: "909368343478",
-  appId: "1:909368343478:web:0733b7a0a57cec5893df17"
-};
-
-        // 2. CONFIGURACIÓN
-        const CONFIG = {
-            ADMIN: 'vicente8sanchez@gmail.com',  
-            PARTNER: 'carlos.real@gmail.com', 
-            TEST_USER: { email: 'vicho.real@gmail.com', name: 'Vicente (Test)', role: 'admin' },
-            
-            // Servicios Base
-            DEFAULT_SERVICES: [
-                { name: 'Arriendo', amount: 350000, icon: 'fa-home', color: 'indigo' },
-                { name: 'Luz', amount: 45000, icon: 'fa-lightbulb', color: 'yellow' },
-                { name: 'Agua', amount: 25000, icon: 'fa-faucet', color: 'blue' },
-                { name: 'Gas', amount: 60000, icon: 'fa-fire', color: 'orange' },
-                { name: 'GC', amount: 90000, icon: 'fa-building', color: 'slate' },
-                { name: 'Internet', amount: 30000, icon: 'fa-wifi', color: 'purple' }
-            ]
+            apiKey: "AIzaSyALsMoeqqLpQge9hMocUHSjmqnpJXNJ9p4",
+            authDomain: "control-mensual-ae833.firebaseapp.com",
+            projectId: "control-mensual-ae833",
+            storageBucket: "control-mensual-ae833.firebasestorage.app",
+            messagingSenderId: "909368343478",
+            appId: "1:909368343478:web:0733b7a0a57cec5893df17"
         };
 
-        // Inicialización Segura
-        let app, db, auth;
-        try {
-            app = initializeApp(firebaseConfig);
-            db = getFirestore(app);
-            auth = getAuth(app);
-        } catch(e) {
-            showError("Configuración de Firebase inválida. Revisa el archivo.");
-        }
+        // ==========================================
+        // 2. CONFIGURACIÓN FAMILIA
+        // ==========================================
+        const SPLIT_USERS = ['vicente8sanchez@gmail.com', 'carlosinvictus50@gmail.com']; 
 
-        let currentUser = CONFIG.TEST_USER;
+        const FAMILY_CONFIG = {
+            'vicente8sanchez@gmail.com': { name: 'Vicente', role: 'admin' },
+            'carlosinvictus50@gmail.com':  { name: 'Carlos',  role: 'partner' },
+            'anabellc.nc@gmail.com':  { name: 'Anabel',  role: 'user' },
+            'juanpapino10@gmail.com':      { name: 'JP',      role: 'user' }
+        };
+
+        const BASE_SERVICES = [
+            { name: 'Arriendo', amount: 350000, icon: 'fa-home', category: 'Hogar' },
+            { name: 'Luz', amount: 45000, icon: 'fa-lightbulb', category: 'Servicios' },
+            { name: 'Agua', amount: 25000, icon: 'fa-faucet', category: 'Servicios' },
+            { name: 'Gas', amount: 60000, icon: 'fa-fire', category: 'Servicios' },
+            { name: 'Super', amount: 150000, icon: 'fa-shopping-cart', category: 'Supermercado' },
+            { name: 'Internet', amount: 30000, icon: 'fa-wifi', category: 'Servicios' },
+            { name: 'G. Común', amount: 90000, icon: 'fa-building', category: 'Hogar' },
+            { name: 'Gatos', amount: 20000, icon: 'fa-cat', category: 'Mascotas' }
+        ];
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
+
+        let currentUser = null;
         let selectedMonth = new Date().toISOString().slice(0, 7);
         let allData = [];
-        let expenseDefaults = {};
+        let priceMemory = {};
+        let budgets = {};
 
-        // --- CONEXIÓN AUTOMÁTICA (AUTO-LOGIN) ---
-        // Esto permite guardar datos sin mostrar el login de Google
-        if (auth) {
-            signInAnonymously(auth)
-                .then(() => {
-                    initUI(); // Iniciar solo si conecta
-                })
-                .catch((error) => {
-                    showError("No se pudo conectar a la base de datos: " + error.message);
-                });
-        }
+        // AUTH
+        window.loginWithGoogle = async () => { try { await signInWithPopup(auth, provider); } catch(e){ document.getElementById('login-error').textContent = e.message; document.getElementById('login-error').classList.remove('hidden'); } };
+        window.logout = () => signOut(auth);
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                if (FAMILY_CONFIG[user.email]) {
+                    currentUser = { ...user, ...FAMILY_CONFIG[user.email] };
+                    initUI();
+                } else {
+                    alert("🚫 Acceso Denegado: Tu correo no está en la lista de familia.");
+                    signOut(auth);
+                }
+            } else {
+                document.getElementById('view-app').classList.add('hidden-view');
+                document.getElementById('view-login').classList.remove('hidden-view');
+            }
+        });
 
         async function initUI() {
+            document.getElementById('view-login').classList.add('hidden-view');
+            document.getElementById('view-app').classList.remove('hidden-view');
+            document.getElementById('userPhoto').src = currentUser.photoURL;
+            document.getElementById('userName').textContent = currentUser.name;
             document.getElementById('monthSelector').value = selectedMonth;
-            
-            // Etiquetas
-            if(currentUser.email === CONFIG.PARTNER) {
-                document.getElementById('debtLabel').textContent = "Le debes a Vicente";
+
+            if (currentUser.role === 'user') {
+                document.getElementById('btnTypeHouse').classList.add('hidden');
+                document.getElementById('btnAddBudget').classList.add('hidden');
+                window.setType('personal');
             } else {
-                document.getElementById('debtLabel').textContent = "Carlos te debe";
+                document.getElementById('btnTypeHouse').classList.remove('hidden');
+                document.getElementById('btnAddBudget').classList.remove('hidden');
+                window.setType('house');
             }
-            
-            await loadDefaults(); 
-            renderQuickButtons();
+
+            await loadPriceMemory();
+            await loadBudgets();
             listenData();
         }
 
-        // --- BASE DE DATOS ---
-        async function loadDefaults() {
+        async function loadBudgets() {
             try {
-                const docRef = doc(db, "config", "expense_defaults");
+                const docRef = doc(db, "config", "presupuestos");
                 const docSnap = await getDoc(docRef);
-                if (docSnap.exists()) expenseDefaults = docSnap.data();
-                else {
-                    expenseDefaults = {};
-                    CONFIG.DEFAULT_SERVICES.forEach(s => expenseDefaults[s.name] = s.amount);
-                }
-            } catch (e) { console.log("Usando defaults locales"); }
-            renderQuickButtons();
+                if (docSnap.exists()) budgets = docSnap.data();
+                else budgets = { 'Supermercado': 200000, 'Servicios': 150000 }; 
+            } catch(e) {}
         }
 
-        async function updateDefaultPrice(name, newAmount) {
-            const isKnown = CONFIG.DEFAULT_SERVICES.some(s => s.name === name);
-            if(isKnown) {
-                expenseDefaults[name] = newAmount;
-                try { await setDoc(doc(db, "config", "expense_defaults"), expenseDefaults); } catch(e){}
-                renderQuickButtons();
+        window.addBudget = async () => {
+            if (currentUser.role === 'user') return; 
+            const cat = prompt("Categoría (ej: Ocio):");
+            if(!cat) return;
+            const limit = prompt("Límite ($):");
+            if(!limit) return;
+            budgets[cat] = parseInt(limit);
+            await setDoc(doc(db, "config", "presupuestos"), budgets);
+            renderBudgets();
+        };
+
+        function renderBudgets() {
+            const container = document.getElementById('budgetsContainer');
+            container.innerHTML = '';
+            const spending = {};
+            allData.forEach(item => {
+                if (item.isParent || (item.type === 'personal' && item.userId === currentUser.email)) {
+                    const cat = item.category || 'General';
+                    spending[cat] = (spending[cat] || 0) + item.amount;
+                }
+            });
+
+            for (const [cat, limit] of Object.entries(budgets)) {
+                const current = spending[cat] || 0;
+                const percent = Math.min((current / limit) * 100, 100);
+                let barColor = 'bg-p-green';
+                if (percent > 75) barColor = 'bg-p-yellow';
+                if (percent >= 100) barColor = 'bg-p-red';
+
+                const div = document.createElement('div');
+                div.innerHTML = `
+                    <div class="flex justify-between text-xs mb-1">
+                        <span class="font-bold text-slate-600">${cat}</span>
+                        <span class="font-mono text-slate-400">${formatMoney(current)} / ${formatMoney(limit)}</span>
+                    </div>
+                    <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                        <div class="h-full ${barColor} progress-bar" style="width: ${percent}%"></div>
+                    </div>
+                `;
+                container.appendChild(div);
             }
         }
+
+        async function loadPriceMemory() {
+            try {
+                const docRef = doc(db, "config", "precios_aprendidos");
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) priceMemory = docSnap.data();
+                else BASE_SERVICES.forEach(s => priceMemory[s.name] = s.amount);
+                renderSmartButtons();
+            } catch(e) {}
+        }
+
+        async function learnPrice(name, amount) {
+            priceMemory[name] = amount;
+            try { await setDoc(doc(db, "config", "precios_aprendidos"), priceMemory); renderSmartButtons(); } catch(e){}
+        }
+
+        function renderSmartButtons() {
+            const container = document.getElementById('smartButtons');
+            container.innerHTML = '';
+            BASE_SERVICES.forEach(s => {
+                const amount = priceMemory[s.name] || s.amount;
+                const formatted = amount >= 1000 ? `${Math.round(amount/1000)}k` : amount;
+                const btn = document.createElement('button');
+                btn.className = "flex-shrink-0 bg-white border border-slate-200 text-slate-600 px-3 py-2 rounded-xl text-xs font-bold shadow-sm hover:border-indigo-300 hover:text-indigo-600 transition active:scale-95 flex flex-col items-center min-w-[70px]";
+                btn.onclick = () => prefill(s.name, amount, true, s.category);
+                btn.innerHTML = `<i class="fas ${s.icon} text-lg mb-1 opacity-50"></i><span>${s.name}</span><span class="text-[9px] font-mono text-slate-400 mt-0.5">$${formatted}</span>`;
+                container.appendChild(btn);
+            });
+        }
+
+        window.changeMonth = () => { selectedMonth = document.getElementById('monthSelector').value; listenData(); };
 
         function listenData() {
             const q = query(collection(db, "gastos"), where("month", "==", selectedMonth));
             onSnapshot(q, (snapshot) => {
                 allData = [];
                 snapshot.forEach(doc => allData.push({ id: doc.id, ...doc.data() }));
-                renderList();
-            }, (error) => {
-                showError("Permiso denegado. Revisa las Reglas de Firestore en la consola.");
+                renderLists();
+                renderBudgets();
             });
         }
 
-        // --- RENDERIZADO ---
-        function renderQuickButtons() {
-            const container = document.getElementById('quickButtonsContainer');
-            container.innerHTML = '';
+        function renderLists() {
+            const houseList = document.getElementById('houseList');
+            const personalList = document.getElementById('personalList');
+            houseList.innerHTML = '';
+            personalList.innerHTML = '';
 
-            CONFIG.DEFAULT_SERVICES.forEach(s => {
-                const currentAmount = expenseDefaults[s.name] || s.amount;
-                const formatAmt = currentAmount >= 1000 ? `${Math.round(currentAmount/1000)}k` : currentAmount;
+            let totalH = 0;
+            let totalP = 0;
 
-                const btn = document.createElement('button');
-                let colorClass = `bg-${s.color}-50 text-${s.color}-700 border-${s.color}-100`;
-                // Fallback colores simples si tailwind falla dinamicamente
-                if(s.color==='indigo') colorClass='bg-indigo-50 text-indigo-700 border-indigo-100';
-                if(s.color==='yellow') colorClass='bg-yellow-50 text-yellow-700 border-yellow-100';
-                if(s.color==='blue') colorClass='bg-blue-50 text-blue-700 border-blue-100';
-                if(s.color==='orange') colorClass='bg-orange-50 text-orange-700 border-orange-100';
-                if(s.color==='slate') colorClass='bg-slate-100 text-slate-600 border-slate-200';
-                if(s.color==='purple') colorClass='bg-purple-50 text-purple-700 border-purple-100';
+            const myExpenses = allData.filter(e => e.type === 'house' || e.userId === currentUser.email);
+            myExpenses.sort((a, b) => b.amount - a.amount);
 
-                btn.className = `shrink-0 ${colorClass} border px-3 py-2 rounded-xl text-xs font-bold transition active:scale-95 flex flex-col items-center min-w-[70px]`;
-                btn.onclick = () => prefill(s.name, currentAmount, true);
-                
-                btn.innerHTML = `
-                    <i class="fas ${s.icon} text-lg mb-1"></i>
-                    <span>${s.name}</span>
-                    <span class="text-[9px] opacity-70 font-mono">$${formatAmt}</span>
-                `;
-                container.appendChild(btn);
-            });
-        }
-
-        function renderList() {
-            const container = document.getElementById('expensesContainer');
-            container.innerHTML = '';
-
-            let totalDebtToVicho = 0;
-            let myView = allData.filter(e => e.type === 'house' || e.userId === currentUser.email);
-
-            // Orden Prioridad: Amarillo > Azul > Rojo > Verde
-            myView.sort((a, b) => getStatusScore(a) - getStatusScore(b));
-
-            if(myView.length === 0) {
-                container.innerHTML = `<div class="text-center py-10 opacity-50"><p class="text-xs text-slate-400">Sin registros</p></div>`;
-                return;
+            if(myExpenses.length === 0) {
+                houseList.innerHTML = '<div class="text-center py-6 text-slate-300 text-xs italic">Limpio</div>';
             }
 
-            myView.forEach(item => {
-                if (item.type === 'house' && !item.paidReimbursement) totalDebtToVicho += (item.amount / 2);
-
-                const state = determineState(item);
+            myExpenses.forEach(item => {
                 const isHouse = item.type === 'house';
-                
-                const div = document.createElement('div');
-                div.className = `bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden ${state.cardClass} transition-all duration-300`;
-                
-                const deleteBtn = `<button onclick="deleteExp('${item.id}')" class="text-slate-300 hover:text-red-500"><i class="fas fa-trash"></i></button>`;
+                const isMine = item.userId === currentUser.email;
 
-                let checksHTML = '';
-                if (isHouse) {
-                    checksHTML = `
-                        <div class="flex gap-2 mt-3 pt-3 border-t border-slate-100/50">
-                            <!-- Botón 1: Pagar Cuenta -->
-                            <button onclick="toggleProvider('${item.id}', ${item.paidProvider})" class="flex-1 py-2.5 rounded-xl text-xs font-bold border flex items-center justify-center gap-2 check-btn ${item.paidProvider ? 'check-active' : 'check-inactive'}">
-                                <i class="fas fa-file-invoice-dollar"></i> ${item.paidProvider ? 'Cta Pagada' : 'Pagar Cta'}
-                            </button>
-                            <!-- Botón 2: Reembolso -->
-                            <button onclick="toggleReimbursement('${item.id}', ${item.paidReimbursement})" class="flex-1 py-2.5 rounded-xl text-xs font-bold border flex items-center justify-center gap-2 check-btn ${item.paidReimbursement ? 'check-active' : 'check-inactive'}">
-                                <i class="fas fa-exchange-alt"></i> ${item.paidReimbursement ? 'Reembolsado' : 'Falta Depósito'}
-                            </button>
+                if (isHouse && item.isParent) {
+                    totalH += item.amount;
+                    const parts = allData.filter(sub => sub.parentId === item.id);
+                    const paidCount = parts.filter(sub => sub.paid).length;
+                    
+                    let statusClass = 'sync-red';
+                    let badgeText = 'IMPAGO';
+                    let badgeClass = 'badge-red';
+
+                    if (paidCount > 0 && paidCount < parts.length) {
+                        statusClass = 'sync-yellow'; badgeText = 'PARCIAL'; badgeClass = 'badge-yellow';
+                    } else if (paidCount === parts.length && parts.length > 0) {
+                        statusClass = 'sync-green'; badgeText = 'LISTO'; badgeClass = 'badge-green';
+                    }
+
+                    const div = document.createElement('div');
+                    div.className = `p-4 rounded-2xl border shadow-sm transition ${statusClass} relative`;
+                    
+                    const canManage = (currentUser.role === 'admin' || currentUser.role === 'partner');
+                    const deleteBtn = canManage ? `<button onclick="deleteGlobal('${item.id}')" class="absolute top-2 right-2 text-slate-300 hover:text-red-500 w-6 h-6 flex items-center justify-center rounded-full transition"><i class="fas fa-trash-alt text-xs"></i></button>` : '';
+
+                    div.innerHTML = `
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h4 class="font-bold text-slate-700 leading-tight">${item.name}</h4>
+                                <p class="text-xs font-mono font-bold text-slate-400 mt-1">${formatMoney(item.amount)}</p>
+                            </div>
+                            <span class="px-2 py-1 rounded text-[9px] font-bold uppercase ${badgeClass} mr-6">${badgeText}</span>
                         </div>
+                        ${deleteBtn}
                     `;
-                } else {
-                    checksHTML = `
-                        <div class="mt-2">
-                             <button onclick="toggleProvider('${item.id}', ${item.paidProvider})" class="w-full py-2 rounded-xl text-xs font-bold border flex items-center justify-center gap-2 check-btn ${item.paidProvider ? 'check-active' : 'check-inactive'}">
-                                <i class="fas fa-check"></i> ${item.paidProvider ? 'Pagado' : 'Marcar Pagado'}
-                            </button>
-                        </div>
-                    `;
+                    houseList.appendChild(div);
                 }
 
-                div.innerHTML = `
-                    <div class="p-4">
-                        <div class="flex justify-between items-start mb-2">
-                            <div>
-                                <h3 class="font-bold text-slate-700 text-lg leading-tight">${item.name}</h3>
-                                <p class="text-xs font-mono font-bold text-slate-400 mt-0.5">${formatMoney(item.amount)} Total</p>
+                if ((!isHouse && isMine) || (isHouse && !item.isParent && isMine)) {
+                    totalP += item.amount;
+                    const div = document.createElement('div');
+                    const paidClass = item.paid ? 'card-personal-done' : 'card-personal-pending';
+                    const icon = isHouse ? 'fa-home' : 'fa-user';
+                    
+                    div.className = `card-personal p-3 rounded-2xl border flex justify-between items-center shadow-sm ${paidClass}`;
+                    div.onclick = () => togglePaid(item.id, item.paid);
+
+                    div.innerHTML = `
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-sm text-slate-400">
+                                <i class="fas ${item.paid ? 'fa-check text-green-500' : icon}"></i>
                             </div>
-                            <div class="text-right">
-                                <span class="px-2 py-1 rounded text-[9px] font-bold uppercase tracking-wider ${state.badgeClass}">${state.label}</span>
-                                <div class="mt-1">${deleteBtn}</div>
+                            <div>
+                                <p class="font-bold text-sm leading-tight">${item.name}</p>
+                                <p class="text-xs font-mono font-bold opacity-70">${formatMoney(item.amount)}</p>
                             </div>
                         </div>
-                        ${isHouse ? `<p class="text-xs text-indigo-600 font-bold mb-1 ml-1"><i class="fas fa-user-friends mr-1"></i> ${formatMoney(item.amount/2)} c/u</p>` : ''}
-                        ${checksHTML}
-                    </div>
-                `;
-                container.appendChild(div);
+                    `;
+                    personalList.appendChild(div);
+                }
             });
 
-            document.getElementById('debtAmount').textContent = formatMoney(totalDebtToVicho);
+            document.getElementById('totalHouse').textContent = formatMoney(totalH);
+            document.getElementById('totalPersonal').textContent = formatMoney(totalP);
         }
 
-        // --- LÓGICA DE ESTADOS ---
-        function determineState(item) {
-            if (item.type !== 'house') {
-                return item.paidProvider 
-                    ? { cardClass: 'card-green', badgeClass: 'badge-green', label: 'LISTO' }
-                    : { cardClass: 'card-red', badgeClass: 'badge-red', label: 'PENDIENTE' };
-            }
-
-            const prov = item.paidProvider;
-            const reimb = item.paidReimbursement;
-
-            // 1. ROJO: Nada (Prioridad Media)
-            if (!prov && !reimb) return { cardClass: 'card-red', badgeClass: 'badge-red', label: 'IMPAGO' };
-            
-            // 2. AMARILLO: Carlos pagó, Falta Cuenta (Prioridad Alta - Alerta)
-            if (!prov && reimb) return { cardClass: 'card-yellow', badgeClass: 'badge-yellow', label: 'FALTA CTA' };
-            
-            // 3. AZUL: Vicho pagó, Falta Reembolso (Prioridad Media - Espera)
-            if (prov && !reimb) return { cardClass: 'card-blue', badgeClass: 'badge-blue', label: 'FALTA DEPÓSITO' };
-            
-            // 4. VERDE: Todo listo (Prioridad Baja)
-            if (prov && reimb) return { cardClass: 'card-green', badgeClass: 'badge-green', label: 'CERRADO' };
-        }
-
-        function getStatusScore(item) {
-             const s = determineState(item);
-             if (s.cardClass === 'card-yellow') return 1; // Urgente
-             if (s.cardClass === 'card-blue') return 2;   // Espera
-             if (s.cardClass === 'card-red') return 3;    // Pendiente normal
-             return 4; // Cerrado
-        }
-
-        // --- ACCIONES ---
-        window.changeMonth = () => { selectedMonth = document.getElementById('monthSelector').value; listenData(); };
-
-        window.prefill = (name, amount, isHouse) => {
+        window.prefill = (name, amount, isHouse, category) => {
+            if (isHouse && currentUser.role === 'user') return alert("Solo Admins pueden agregar gastos de casa.");
             document.getElementById('inputName').value = name;
             document.getElementById('inputAmount').value = amount;
-            const radios = document.getElementsByName('expType');
-            radios.forEach(r => { if(r.value === (isHouse ? 'house' : 'personal')) r.checked = true; });
+            document.getElementById('currentCategory').value = category || 'General';
+            window.setType(isHouse ? 'house' : 'personal');
             if(!amount) document.getElementById('inputAmount').focus();
+        };
+
+        window.setType = (type) => {
+            document.getElementById('currentType').value = type;
+            const btnH = document.getElementById('btnTypeHouse');
+            const btnP = document.getElementById('btnTypePersonal');
+            if(type === 'house') {
+                btnH.className = "px-4 py-2 rounded-lg text-xs font-bold bg-white shadow-sm text-indigo-600 transition flex items-center gap-1";
+                btnP.className = "px-4 py-2 rounded-lg text-xs font-bold text-slate-400 hover:text-slate-600 transition flex items-center gap-1";
+            } else {
+                btnP.className = "px-4 py-2 rounded-lg text-xs font-bold bg-white shadow-sm text-emerald-600 transition flex items-center gap-1";
+                btnH.className = "px-4 py-2 rounded-lg text-xs font-bold text-slate-400 hover:text-slate-600 transition flex items-center gap-1";
+            }
         };
 
         window.saveExpense = async () => {
             const name = document.getElementById('inputName').value;
             const amount = parseInt(document.getElementById('inputAmount').value);
-            const type = document.querySelector('input[name="expType"]:checked').value;
-            const btn = document.getElementById('saveBtn');
+            const type = document.getElementById('currentType').value;
+            const category = document.getElementById('currentCategory').value;
 
-            if(!name || isNaN(amount)) return showToast("Datos incompletos");
-            btn.disabled = true;
+            if(!name || isNaN(amount)) return showToast("Falta info");
 
             try {
-                await addDoc(collection(db, "gastos"), {
-                    userId: currentUser.email,
-                    name: name,
-                    amount: amount,
-                    type: type, 
-                    month: selectedMonth,
-                    paidProvider: false,      
-                    paidReimbursement: false, 
-                    date: Date.now()
-                });
+                const batch = writeBatch(db);
                 
-                if(type === 'house') await updateDefaultPrice(name, amount);
-                
+                if (type === 'house' && SPLIT_USERS.includes(currentUser.email)) {
+                    const parentRef = doc(collection(db, "gastos"));
+                    batch.set(parentRef, {
+                        name: name, amount: amount, type: 'house', isParent: true, category: category,
+                        userId: 'HOUSE', month: selectedMonth, date: Date.now()
+                    });
+                    const half = Math.ceil(amount / 2);
+                    SPLIT_USERS.forEach(email => {
+                        const childRef = doc(collection(db, "gastos"));
+                        batch.set(childRef, {
+                            name: name, amount: half, type: 'house', isParent: false, category: category,
+                            parentId: parentRef.id, userId: email, month: selectedMonth, paid: false, date: Date.now()
+                        });
+                    });
+                    await learnPrice(name, amount);
+                } else {
+                    await addDoc(collection(db, "gastos"), {
+                        name: name, amount: amount, type: 'personal', category: category,
+                        userId: currentUser.email, month: selectedMonth, paid: false, date: Date.now()
+                    });
+                }
+
+                await batch.commit();
                 document.getElementById('inputName').value = '';
                 document.getElementById('inputAmount').value = '';
                 showToast("Guardado");
-            } catch(e) { 
-                console.error(e); 
-                showError("Error al guardar: " + e.message);
-            }
-            btn.disabled = false;
+            } catch(e) { console.error(e); }
         };
 
-        window.toggleProvider = async (id, status) => { await updateDoc(doc(db, "gastos", id), { paidProvider: !status }); };
-        window.toggleReimbursement = async (id, status) => { await updateDoc(doc(db, "gastos", id), { paidReimbursement: !status }); };
-        window.deleteExp = async (id) => { if(confirm("¿Eliminar?")) await deleteDoc(doc(db, "gastos", id)); };
+        window.exportTextReport = () => {
+            if (allData.length === 0) return showToast("Nada");
+            let text = `REPORTE FINANCIERO - ${selectedMonth}\n===================================\n\n`;
+            const totalH = allData.filter(e => e.isParent).reduce((s, e) => s + e.amount, 0);
+            const myTotal = allData.filter(e => (!e.isParent && e.userId === currentUser.email)).reduce((s, e) => s + e.amount, 0);
+            text += `GASTOS HOGAR: ${formatMoney(totalH)}\nMI BOLSILLO:  ${formatMoney(myTotal)}\n\nDETALLE:\n`;
+            allData.forEach(e => {
+                if (e.isParent || (e.type === 'personal' && e.userId === currentUser.email)) {
+                    let statusStr = "Pendiente";
+                    if(e.isParent) {
+                        const parts = allData.filter(sub => sub.parentId === e.id);
+                        const paidCount = parts.filter(sub => sub.paid).length;
+                        statusStr = (paidCount === parts.length) ? "PAGADO TOTAL" : "PARCIAL";
+                    } else { statusStr = e.paid ? "PAGADO" : "PENDIENTE"; }
+                    text += `${e.name.padEnd(20)} | ${formatMoney(e.amount).padEnd(10)} | ${statusStr}\n`;
+                }
+            });
+            const blob = new Blob([text], { type: 'text/plain' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `Reporte_${selectedMonth}.txt`;
+            link.click();
+        };
 
-        // Helpers
+        window.togglePaid = async (id, status) => { await updateDoc(doc(db, "gastos", id), { paid: !status }); };
+        window.deleteGlobal = async (parentId) => { if(confirm("¿Borrar?")) { const b = writeBatch(db); b.delete(doc(db, "gastos", parentId)); allData.filter(d=>d.parentId===parentId).forEach(c=>b.delete(doc(db,"gastos",c.id))); await b.commit(); }};
         function formatMoney(val) { return new Intl.NumberFormat('es-CL', {style:'currency', currency:'CLP', maximumFractionDigits:0}).format(val); }
-        function showToast(msg) {
-            const t = document.getElementById('toast'); t.textContent = msg;
-            t.classList.remove('-translate-y-4', 'opacity-0');
-            setTimeout(() => t.classList.add('-translate-y-4', 'opacity-0'), 3000);
-        }
-        function showError(msg) {
-            document.getElementById('errorMsg').textContent = msg;
-            document.getElementById('errorAlert').classList.remove('hidden');
-        }
-
-        // Exponer globalmente
-        window.changeMonth = window.changeMonth;
-        window.prefill = window.prefill;
-        window.saveExpense = window.saveExpense;
-        window.toggleProvider = window.toggleProvider;
-        window.toggleReimbursement = window.toggleReimbursement;
-        window.deleteExp = window.deleteExp;
+        function showToast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.remove('-translate-y-4', 'opacity-0'); setTimeout(() => t.classList.add('-translate-y-4', 'opacity-0'), 3000); }
     </script>
 </body>
 </html>
-
-
