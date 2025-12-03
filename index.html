@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Finanzas Casa</title>
+    <title>Finanzas Suite v34</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
@@ -16,25 +16,20 @@
         .hidden-view { display: none !important; }
         .hide-scroll::-webkit-scrollbar { display: none; }
         
-        /* Barras de Presupuesto */
-        .progress-bar { transition: width 1s cubic-bezier(0.4, 0, 0.2, 1); }
-        .bg-p-green { background-color: #10b981; }
-        .bg-p-yellow { background-color: #f59e0b; }
-        .bg-p-red { background-color: #ef4444; }
+        /* Tarjeta de Notificación */
+        .card-request { background: #fff7ed; border-left: 6px solid #f97316; }
+        
+        /* Semáforo Hogar */
+        .sync-red { border-left: 6px solid #ef4444; background: #fff; }
+        .sync-yellow { border-left: 6px solid #f59e0b; background: #fffbeb; }
+        .sync-green { border-left: 6px solid #22c55e; background: #f0fdf4; opacity: 0.8; }
 
-        /* Colores Sync */
-        .sync-red { background: white; border-left: 6px solid #ef4444; }
-        .badge-red { background: #fee2e2; color: #991b1b; }
-        .sync-yellow { background: #fffbeb; border-left: 6px solid #f59e0b; }
-        .badge-yellow { background: #fef3c7; color: #92400e; }
-        .sync-green { background: #f0fdf4; border-left: 6px solid #22c55e; opacity: 0.8; }
-        .badge-green { background: #dcfce7; color: #166534; }
+        /* Estado Personal */
+        .card-personal-pending { background: white; border: 1px solid #e2e8f0; border-left: 4px solid #cbd5e1; }
+        .card-personal-done { background: #f0fdf4; border: 1px solid #dcfce7; border-left: 4px solid #22c55e; color: #166534; }
 
-        /* Tarjeta Personal */
-        .card-personal { cursor: pointer; transition: all 0.2s; border: 2px solid transparent; }
-        .card-personal:active { transform: scale(0.97); }
-        .card-personal-pending { background: white; border-color: #e2e8f0; }
-        .card-personal-done { background: #dcfce7; border-color: #22c55e; color: #14532d; }
+        /* Botones Selección */
+        .btn-select.selected { background-color: #4f46e5; color: white; border-color: #4f46e5; }
     </style>
 </head>
 <body class="bg-slate-100 min-h-screen text-slate-800">
@@ -43,15 +38,14 @@
     <div id="view-login" class="flex flex-col items-center justify-center min-h-screen p-6 fade-in">
         <div class="bg-white p-8 rounded-3xl shadow-xl w-full max-w-sm text-center border border-slate-100">
             <div class="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                <i class="fas fa-home text-4xl text-indigo-600"></i>
+                <i class="fas fa-wallet text-4xl text-indigo-600"></i>
             </div>
-            <h1 class="text-3xl font-extrabold text-slate-800 mb-2">Finanzas Casa</h1>
-            <p class="text-slate-400 text-sm mb-8">Control y Transparencia</p>
+            <h1 class="text-3xl font-extrabold text-slate-800 mb-2">Finanzas Suite</h1>
+            <p class="text-slate-400 text-sm mb-8">Gestión Inteligente</p>
             <button onclick="loginWithGoogle()" class="w-full bg-white border border-slate-300 text-slate-700 font-bold py-4 rounded-xl shadow-sm hover:bg-slate-50 flex items-center justify-center gap-3 transition active:scale-95 group">
                 <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-6 h-6 group-hover:scale-110 transition">
                 Entrar con Google
             </button>
-            <p id="login-error" class="text-red-500 text-xs mt-4 font-bold hidden"></p>
         </div>
     </div>
 
@@ -67,10 +61,8 @@
                     <p id="userName" class="font-bold text-slate-800 text-sm">Usuario</p>
                 </div>
             </div>
-            <div class="flex items-center gap-2">
-                <button onclick="exportTextReport()" class="w-9 h-9 rounded-full bg-slate-800 text-white hover:bg-black flex items-center justify-center transition shadow-lg" title="Descargar Reporte">
-                    <i class="fas fa-file-alt text-xs"></i>
-                </button>
+            <div class="flex gap-2 items-center">
+                <button onclick="exportTextReport()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center transition"><i class="fas fa-download text-xs"></i></button>
                 <div class="bg-slate-100 rounded-lg px-2 py-1">
                     <input type="month" id="monthSelector" class="bg-transparent text-xs font-bold text-slate-600 outline-none cursor-pointer" onchange="changeMonth()">
                 </div>
@@ -79,68 +71,107 @@
 
         <main class="p-5 max-w-6xl mx-auto space-y-6">
 
-            <!-- 1. METAS (PRESUPUESTO) -->
-            <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 relative overflow-hidden">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest"><i class="fas fa-bullseye mr-1"></i> Metas Mensuales</h3>
-                    <button id="btnAddBudget" onclick="addBudget()" class="text-[10px] bg-slate-100 px-2 py-1 rounded text-blue-600 font-bold hover:bg-blue-50">+ Meta</button>
+            <!-- 1. BUZÓN DE APROBACIONES -->
+            <div id="requestsPanel" class="hidden space-y-3">
+                <div class="flex items-center gap-2 px-1 animate-pulse">
+                    <span class="w-2 h-2 rounded-full bg-orange-500"></span>
+                    <h3 class="text-xs font-bold text-orange-600 uppercase tracking-widest">Requiere tu Aprobación</h3>
                 </div>
-                <div id="budgetsContainer" class="space-y-4">
-                    <div class="text-center py-2 text-xs text-slate-300">Cargando...</div>
+                <div id="requestsList" class="space-y-3"></div>
+            </div>
+
+            <!-- 2. SUELDO -->
+            <div class="bg-slate-800 p-6 rounded-3xl shadow-lg relative overflow-hidden text-white">
+                <div class="absolute top-0 right-0 p-4 opacity-10"><i class="fas fa-money-bill-wave text-6xl"></i></div>
+                
+                <div class="flex justify-between items-start mb-4 relative z-10">
+                    <div>
+                        <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Sueldo Líquido</p>
+                        <div class="flex items-center gap-2">
+                            <span class="text-slate-400 text-xl">$</span>
+                            <input type="number" id="salaryInput" class="bg-transparent text-3xl font-extrabold text-white w-40 outline-none border-b border-slate-600 focus:border-emerald-400 transition" placeholder="0" onchange="updateSalary()">
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-xs text-slate-400 uppercase font-bold">Disponible Real</p>
+                        <p class="text-2xl font-bold text-emerald-400" id="salaryRemaining">$0</p>
+                    </div>
+                </div>
+                <!-- Barra -->
+                <div class="w-full bg-slate-700 h-2 rounded-full overflow-hidden">
+                    <div id="salaryBar" class="h-full bg-emerald-500 transition-all duration-700" style="width: 0%"></div>
+                </div>
+                <div class="flex justify-between text-[10px] font-bold text-slate-400 uppercase">
+                    <span>Gastado (Pagado): <span id="salarySpent" class="text-white">$0</span></span>
+                    <span id="salaryPercent">0%</span>
                 </div>
             </div>
 
-            <!-- 2. FORMULARIO -->
+            <!-- 3. PANEL DE ACCIÓN -->
             <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 relative z-10">
                 <div class="flex justify-between items-center mb-3">
-                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Nuevo Gasto</p>
-                    <span id="loadingDefaults" class="text-[10px] text-blue-500 animate-pulse hidden">Actualizando...</span>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Nuevo Movimiento</p>
+                    <span id="loadingDefaults" class="text-[10px] text-blue-500 animate-pulse hidden">Sync...</span>
                 </div>
                 
+                <!-- Botones Dinámicos -->
                 <div id="smartButtons" class="flex gap-2 overflow-x-auto hide-scroll mb-4 pb-1"></div>
 
-                <div class="flex flex-col md:flex-row gap-3">
-                    <div class="flex-grow flex gap-3">
-                        <input type="text" id="inputName" placeholder="Concepto" class="w-full p-3 bg-slate-50 rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-indigo-100 transition">
-                        <input type="number" id="inputAmount" placeholder="$ Total" class="w-1/3 p-3 bg-slate-50 rounded-xl font-bold text-center text-sm outline-none focus:ring-2 focus:ring-indigo-100 transition">
-                    </div>
-                    
-                    <div class="flex gap-2">
-                        <div class="bg-slate-100 p-1 rounded-xl flex">
-                            <!-- Solo Vicho y Carlos pueden marcar "Casa" -->
-                            <button onclick="setType('house')" id="btnTypeHouse" class="px-4 py-2 rounded-lg text-xs font-bold bg-white shadow-sm text-indigo-600 transition flex items-center gap-1"><i class="fas fa-home"></i> Casa</button>
-                            <button onclick="setType('personal')" id="btnTypePersonal" class="px-4 py-2 rounded-lg text-xs font-bold text-slate-400 hover:text-slate-600 transition flex items-center gap-1"><i class="fas fa-user"></i> Mío</button>
-                        </div>
-                        <button onclick="saveExpense()" class="bg-slate-900 text-white px-6 py-2 rounded-xl font-bold text-sm hover:bg-black transition shadow-lg active:scale-95">
-                            <i class="fas fa-plus"></i>
-                        </button>
-                    </div>
+                <!-- Toggle Tipo -->
+                <div class="flex gap-2 mb-4">
+                    <button onclick="setMode('personal')" id="btnModePersonal" class="flex-1 py-3 rounded-xl border-2 text-xs font-bold transition flex flex-col items-center justify-center gap-1 border-emerald-500 bg-emerald-50 text-emerald-700">
+                        <i class="fas fa-user"></i> Mío
+                    </button>
+                    <button onclick="setMode('house')" id="btnModeHouse" class="flex-1 py-3 rounded-xl border-2 text-xs font-bold transition flex flex-col items-center justify-center gap-1 border-slate-100 text-slate-400">
+                        <i class="fas fa-home"></i> Casa (Split)
+                    </button>
+                    <button onclick="setMode('custom')" id="btnModeCustom" class="flex-1 py-3 rounded-xl border-2 text-xs font-bold transition flex flex-col items-center justify-center gap-1 border-slate-100 text-slate-400">
+                        <i class="fas fa-users"></i> Grupo
+                    </button>
                 </div>
-                <input type="hidden" id="currentType" value="house">
-                <input type="hidden" id="currentCategory" value="General">
+
+                <!-- Info Split Casa -->
+                <div id="houseSplitInfo" class="hidden mb-4 bg-indigo-50 p-3 rounded-xl border border-indigo-100 text-xs text-indigo-800">
+                    <p class="font-bold mb-1"><i class="fas fa-info-circle"></i> Distribución Automática:</p>
+                    <ul class="list-disc list-inside opacity-80">
+                        <li>Carlos: 50%</li>
+                        <li>Vicente: 25%</li>
+                        <li>Anabel: 25%</li>
+                    </ul>
+                </div>
+
+                <!-- Selector Grupo -->
+                <div id="customGroupSelector" class="hidden mb-4 bg-slate-50 p-3 rounded-xl">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase mb-2">Solicitar a:</p>
+                    <div class="flex gap-2 flex-wrap" id="participantsContainer"></div>
+                </div>
+
+                <!-- Inputs -->
+                <div class="flex gap-3">
+                    <input type="text" id="inputName" placeholder="Concepto" class="w-full p-3 bg-slate-50 rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-indigo-100 transition">
+                    <input type="number" id="inputAmount" placeholder="$ Total" class="w-1/3 p-3 bg-slate-50 rounded-xl font-bold text-center text-sm outline-none focus:ring-2 focus:ring-indigo-100 transition">
+                </div>
+                
+                <button onclick="saveExpense()" class="w-full mt-3 bg-slate-900 text-white py-3 rounded-xl font-bold hover:bg-black transition shadow-lg active:scale-95">
+                    <i class="fas fa-plus mr-2"></i> Procesar Gasto
+                </button>
+                <input type="hidden" id="currentMode" value="personal">
             </div>
 
-            <!-- 3. VISTA DIVIDIDA -->
+            <!-- 4. LISTAS -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 
-                <!-- IZQUIERDA: ESTADO DE CUENTAS (Visible para TODOS) -->
+                <!-- GASTOS HOGAR -->
                 <div class="space-y-4">
-                    <div class="flex items-center justify-between px-2">
-                        <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                            <span class="w-2 h-2 rounded-full bg-slate-400"></span> Estado del Hogar
-                        </h3>
-                        <span class="text-xs font-mono font-bold text-slate-400" id="totalHouse">$0</span>
-                    </div>
+                    <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest px-2">Estado del Hogar</h3>
                     <div id="houseList" class="space-y-3"></div>
                 </div>
 
-                <!-- DERECHA: MIS PAGOS (Editable solo por mí) -->
+                <!-- MIS PAGOS -->
                 <div class="space-y-4">
-                    <div class="flex items-center justify-between px-2">
-                        <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Mis Pagos
-                        </h3>
-                        <span class="text-xs font-mono font-bold text-emerald-600" id="totalPersonal">$0</span>
+                    <div class="flex justify-between px-2">
+                        <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest">Mis Pagos</h3>
+                        <span id="totalPersonal" class="text-xs font-bold text-emerald-600">$0</span>
                     </div>
                     <div id="personalList" class="space-y-3"></div>
                 </div>
@@ -150,6 +181,7 @@
         </main>
     </div>
 
+    <!-- TOAST -->
     <div id="toast" class="fixed top-6 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-6 py-3 rounded-full shadow-2xl text-xs font-bold opacity-0 transition-all pointer-events-none z-50 -translate-y-4 flex items-center gap-2">
         <span id="toastMsg">Mensaje</span>
     </div>
@@ -160,7 +192,7 @@
         import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         // ==========================================
-        // 1. CREDENCIALES
+        // 1. TUS CREDENCIALES (PEGA AQUÍ)
         // ==========================================
         const firebaseConfig = {
             apiKey: "AIzaSyALsMoeqqLpQge9hMocUHSjmqnpJXNJ9p4",
@@ -172,26 +204,38 @@
         };
 
         // ==========================================
-        // 2. CONFIGURACIÓN FAMILIA
+        // 2. CONFIGURACIÓN FAMILIA (IMPORTANTE)
         // ==========================================
-        const SPLIT_USERS = ['vicente8sanchez@gmail.com', 'carlosinvictus50@gmail.com']; 
-
-        const FAMILY_CONFIG = {
-            'vicente8sanchez@gmail.com': { name: 'Vicente', role: 'admin' },
-            'carlosinvictus50@gmail.com':  { name: 'Carlos',  role: 'partner' },
-            'anabellc.nc@gmail.com':  { name: 'Anabel',  role: 'user' },
-            'juanpapino10@gmail.com':      { name: 'JP',      role: 'user' }
+        const EMAILS = {
+            VICENTE: 'vicente8sanchez@gmail.com',
+            CARLOS:  'carlosinvictus50@gmail.com',
+            ANABEL:  'anabellc.nc@gmail.com',
+            JP:      'juanpapino10@gmail.com'
         };
 
+        const USERS = [
+            { email: EMAILS.VICENTE, name: 'Vicente', role: 'admin' },
+            { email: EMAILS.CARLOS,  name: 'Carlos',  role: 'partner' },
+            { email: EMAILS.ANABEL,  name: 'Anabel',  role: 'user' },
+            { email: EMAILS.JP,      name: 'JP',      role: 'user' }
+        ];
+
+        // Definimos quiénes pagan el gasto de casa y cuánto
+        const HOUSE_SPLIT = [
+            { email: EMAILS.CARLOS,  percent: 0.50 }, // 50%
+            { email: EMAILS.VICENTE, percent: 0.25 }, // 25%
+            { email: EMAILS.ANABEL,  percent: 0.25 }  // 25%
+        ];
+
+        const HOUSE_ADMINS = [EMAILS.VICENTE, EMAILS.CARLOS]; 
+
         const BASE_SERVICES = [
-            { name: 'Arriendo', amount: 350000, icon: 'fa-home', category: 'Hogar' },
-            { name: 'Luz', amount: 45000, icon: 'fa-lightbulb', category: 'Servicios' },
-            { name: 'Agua', amount: 25000, icon: 'fa-faucet', category: 'Servicios' },
-            { name: 'Gas', amount: 60000, icon: 'fa-fire', category: 'Servicios' },
-            { name: 'Super', amount: 150000, icon: 'fa-shopping-cart', category: 'Supermercado' },
-            { name: 'Internet', amount: 30000, icon: 'fa-wifi', category: 'Servicios' },
-            { name: 'G. Común', amount: 90000, icon: 'fa-building', category: 'Hogar' },
-            { name: 'Gatos', amount: 20000, icon: 'fa-cat', category: 'Mascotas' }
+            { name: 'Arriendo', amount: 350000, icon: 'fa-home' },
+            { name: 'Luz', amount: 45000, icon: 'fa-lightbulb' },
+            { name: 'Agua', amount: 25000, icon: 'fa-faucet' },
+            { name: 'Gas', amount: 60000, icon: 'fa-fire' },
+            { name: 'Internet', amount: 30000, icon: 'fa-wifi' },
+            { name: 'GC', amount: 90000, icon: 'fa-building' }
         ];
 
         const app = initializeApp(firebaseConfig);
@@ -203,20 +247,21 @@
         let selectedMonth = new Date().toISOString().slice(0, 7);
         let allData = [];
         let priceMemory = {};
-        let budgets = {};
+        let salaryData = 0;
+        let selectedParticipants = [];
 
         // AUTH
-        window.loginWithGoogle = async () => { try { await signInWithPopup(auth, provider); } catch(e){ document.getElementById('login-error').textContent = e.message; document.getElementById('login-error').classList.remove('hidden'); } };
+        window.loginWithGoogle = async () => { try { await signInWithPopup(auth, provider); } catch(e){ alert(e.message); } };
         window.logout = () => signOut(auth);
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                if (FAMILY_CONFIG[user.email]) {
-                    currentUser = { ...user, ...FAMILY_CONFIG[user.email] };
+                const config = USERS.find(u => u.email === user.email);
+                if (config) {
+                    currentUser = { ...user, ...config };
                     initUI();
                 } else {
-                    alert("🚫 Acceso Denegado: Tu correo no está en la lista de familia.");
-                    signOut(auth);
+                    alert("No autorizado"); signOut(auth);
                 }
             } else {
                 document.getElementById('view-app').classList.add('hidden-view');
@@ -231,103 +276,97 @@
             document.getElementById('userName').textContent = currentUser.name;
             document.getElementById('monthSelector').value = selectedMonth;
 
+            // Restricción de botones para usuarios
             if (currentUser.role === 'user') {
-                document.getElementById('btnTypeHouse').classList.add('hidden');
-                document.getElementById('btnAddBudget').classList.add('hidden');
-                window.setType('personal');
-            } else {
-                document.getElementById('btnTypeHouse').classList.remove('hidden');
-                document.getElementById('btnAddBudget').classList.remove('hidden');
-                window.setType('house');
+                document.getElementById('btnModeHouse').classList.add('hidden');
+                window.setMode('personal');
             }
 
+            renderParticipants(); 
+            await loadSalary();
             await loadPriceMemory();
-            await loadBudgets();
             listenData();
         }
 
-        async function loadBudgets() {
+        // --- GESTIÓN SALARIO ---
+        async function loadSalary() {
             try {
-                const docRef = doc(db, "config", "presupuestos");
-                const docSnap = await getDoc(docRef);
-                if (docSnap.exists()) budgets = docSnap.data();
-                else budgets = { 'Supermercado': 200000, 'Servicios': 150000 }; 
+                const docId = `salary_${currentUser.email}_${selectedMonth}`;
+                const docSnap = await getDoc(doc(db, "salaries", docId));
+                salaryData = docSnap.exists() ? docSnap.data().amount : 0;
+                document.getElementById('salaryInput').value = salaryData > 0 ? salaryData : '';
+                updateSalaryUI();
             } catch(e) {}
         }
 
-        window.addBudget = async () => {
-            if (currentUser.role === 'user') return; 
-            const cat = prompt("Categoría (ej: Ocio):");
-            if(!cat) return;
-            const limit = prompt("Límite ($):");
-            if(!limit) return;
-            budgets[cat] = parseInt(limit);
-            await setDoc(doc(db, "config", "presupuestos"), budgets);
-            renderBudgets();
+        window.updateSalary = async () => {
+            const amount = parseInt(document.getElementById('salaryInput').value) || 0;
+            salaryData = amount;
+            const docId = `salary_${currentUser.email}_${selectedMonth}`;
+            await setDoc(doc(db, "salaries", docId), { amount: amount });
+            updateSalaryUI();
         };
 
-        function renderBudgets() {
-            const container = document.getElementById('budgetsContainer');
-            container.innerHTML = '';
-            const spending = {};
-            allData.forEach(item => {
-                if (item.isParent || (item.type === 'personal' && item.userId === currentUser.email)) {
-                    const cat = item.category || 'General';
-                    spending[cat] = (spending[cat] || 0) + item.amount;
-                }
+        function updateSalaryUI() {
+            const myPaid = allData.filter(e => 
+                e.userId === currentUser.email && 
+                e.paid && 
+                e.approvalStatus !== 'pending'
+            );
+            const spent = myPaid.reduce((sum, e) => sum + e.amount, 0);
+            const remaining = salaryData - spent;
+            const percent = salaryData > 0 ? (spent / salaryData) * 100 : 0;
+
+            document.getElementById('salaryRemaining').textContent = formatMoney(remaining);
+            document.getElementById('salarySpent').textContent = formatMoney(spent);
+            document.getElementById('salaryPercent').textContent = `${Math.round(percent)}%`;
+            document.getElementById('salaryBar').style.width = `${Math.min(percent, 100)}%`;
+            
+            const bar = document.getElementById('salaryBar');
+            bar.style.backgroundColor = percent > 90 ? '#ef4444' : (percent > 60 ? '#f59e0b' : '#10b981');
+        }
+
+        // --- UI BOTONES ---
+        window.setMode = (mode) => {
+            document.getElementById('currentMode').value = mode;
+            const btns = ['btnModePersonal', 'btnModeHouse', 'btnModeCustom'];
+            btns.forEach(id => {
+                const el = document.getElementById(id);
+                if(el) el.className = "flex-1 py-3 rounded-xl border-2 text-xs font-bold transition flex flex-col items-center justify-center gap-1 border-slate-100 text-slate-400";
             });
+            
+            document.getElementById('customGroupSelector').classList.add('hidden');
+            document.getElementById('houseSplitInfo').classList.add('hidden');
 
-            for (const [cat, limit] of Object.entries(budgets)) {
-                const current = spending[cat] || 0;
-                const percent = Math.min((current / limit) * 100, 100);
-                let barColor = 'bg-p-green';
-                if (percent > 75) barColor = 'bg-p-yellow';
-                if (percent >= 100) barColor = 'bg-p-red';
-
-                const div = document.createElement('div');
-                div.innerHTML = `
-                    <div class="flex justify-between text-xs mb-1">
-                        <span class="font-bold text-slate-600">${cat}</span>
-                        <span class="font-mono text-slate-400">${formatMoney(current)} / ${formatMoney(limit)}</span>
-                    </div>
-                    <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                        <div class="h-full ${barColor} progress-bar" style="width: ${percent}%"></div>
-                    </div>
-                `;
-                container.appendChild(div);
+            if (mode === 'personal') {
+                document.getElementById('btnModePersonal').className = "flex-1 py-3 rounded-xl border-2 text-xs font-bold transition flex flex-col items-center justify-center gap-1 border-emerald-500 bg-emerald-50 text-emerald-700";
+            } else if (mode === 'house') {
+                document.getElementById('btnModeHouse').className = "flex-1 py-3 rounded-xl border-2 text-xs font-bold transition flex flex-col items-center justify-center gap-1 border-indigo-500 bg-indigo-50 text-indigo-700";
+                document.getElementById('houseSplitInfo').classList.remove('hidden');
+            } else if (mode === 'custom') {
+                document.getElementById('btnModeCustom').className = "flex-1 py-3 rounded-xl border-2 text-xs font-bold transition flex flex-col items-center justify-center gap-1 border-purple-500 bg-purple-50 text-purple-700";
+                document.getElementById('customGroupSelector').classList.remove('hidden');
             }
-        }
+        };
 
-        async function loadPriceMemory() {
-            try {
-                const docRef = doc(db, "config", "precios_aprendidos");
-                const docSnap = await getDoc(docRef);
-                if (docSnap.exists()) priceMemory = docSnap.data();
-                else BASE_SERVICES.forEach(s => priceMemory[s.name] = s.amount);
-                renderSmartButtons();
-            } catch(e) {}
-        }
-
-        async function learnPrice(name, amount) {
-            priceMemory[name] = amount;
-            try { await setDoc(doc(db, "config", "precios_aprendidos"), priceMemory); renderSmartButtons(); } catch(e){}
-        }
-
-        function renderSmartButtons() {
-            const container = document.getElementById('smartButtons');
-            container.innerHTML = '';
-            BASE_SERVICES.forEach(s => {
-                const amount = priceMemory[s.name] || s.amount;
-                const formatted = amount >= 1000 ? `${Math.round(amount/1000)}k` : amount;
+        function renderParticipants() {
+            const c = document.getElementById('participantsContainer'); c.innerHTML='';
+            USERS.forEach(u => {
+                if(u.email === currentUser.email) return; 
                 const btn = document.createElement('button');
-                btn.className = "flex-shrink-0 bg-white border border-slate-200 text-slate-600 px-3 py-2 rounded-xl text-xs font-bold shadow-sm hover:border-indigo-300 hover:text-indigo-600 transition active:scale-95 flex flex-col items-center min-w-[70px]";
-                btn.onclick = () => prefill(s.name, amount, true, s.category);
-                btn.innerHTML = `<i class="fas ${s.icon} text-lg mb-1 opacity-50"></i><span>${s.name}</span><span class="text-[9px] font-mono text-slate-400 mt-0.5">$${formatted}</span>`;
-                container.appendChild(btn);
+                btn.className = "btn-select px-3 py-2 rounded-lg border bg-white text-xs font-bold text-slate-500";
+                btn.textContent = u.name;
+                btn.onclick = () => {
+                    btn.classList.toggle('selected');
+                    if(btn.classList.contains('selected')) selectedParticipants.push(u.email);
+                    else selectedParticipants = selectedParticipants.filter(e => e !== u.email);
+                };
+                c.appendChild(btn);
             });
         }
 
-        window.changeMonth = () => { selectedMonth = document.getElementById('monthSelector').value; listenData(); };
+        // --- CORE DATA ---
+        window.changeMonth = () => { selectedMonth = document.getElementById('monthSelector').value; loadSalary(); listenData(); };
 
         function listenData() {
             const q = query(collection(db, "gastos"), where("month", "==", selectedMonth));
@@ -335,182 +374,179 @@
                 allData = [];
                 snapshot.forEach(doc => allData.push({ id: doc.id, ...doc.data() }));
                 renderLists();
-                renderBudgets();
+                updateSalaryUI();
             });
         }
 
         function renderLists() {
             const houseList = document.getElementById('houseList');
             const personalList = document.getElementById('personalList');
-            houseList.innerHTML = '';
-            personalList.innerHTML = '';
-
-            let totalH = 0;
-            let totalP = 0;
+            const requestsList = document.getElementById('requestsList');
+            const requestsPanel = document.getElementById('requestsPanel');
+            
+            houseList.innerHTML = ''; personalList.innerHTML = ''; requestsList.innerHTML = '';
+            let hasRequests = false; let sumPersonal = 0;
 
             const myExpenses = allData.filter(e => e.type === 'house' || e.userId === currentUser.email);
-            myExpenses.sort((a, b) => b.amount - a.amount);
-
-            if(myExpenses.length === 0) {
-                houseList.innerHTML = '<div class="text-center py-6 text-slate-300 text-xs italic">Limpio</div>';
-            }
 
             myExpenses.forEach(item => {
                 const isHouse = item.type === 'house';
                 const isMine = item.userId === currentUser.email;
+                const isPending = item.approvalStatus === 'pending';
 
+                // 1. SOLICITUDES
+                if (isMine && isPending) {
+                    hasRequests = true;
+                    const div = document.createElement('div');
+                    div.className = "card-request p-4 rounded-xl flex justify-between items-center shadow-sm";
+                    div.innerHTML = `
+                        <div>
+                            <p class="text-[10px] font-bold text-orange-600 uppercase">Solicitud de ${item.requesterName || 'Alguien'}</p>
+                            <h4 class="font-bold text-slate-800">${item.name}</h4>
+                            <p class="text-xs font-mono font-bold text-slate-500">${formatMoney(item.amount)}</p>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="deleteItem('${item.id}', false)" class="w-8 h-8 rounded-full bg-white text-red-500 flex items-center justify-center hover:bg-red-50"><i class="fas fa-times"></i></button>
+                            <button onclick="approveItem('${item.id}')" class="w-8 h-8 rounded-full bg-white text-green-500 flex items-center justify-center hover:bg-green-50 shadow-sm"><i class="fas fa-check"></i></button>
+                        </div>
+                    `;
+                    requestsList.appendChild(div);
+                    return; 
+                }
+
+                // 2. PANEL HOGAR
                 if (isHouse && item.isParent) {
-                    totalH += item.amount;
                     const parts = allData.filter(sub => sub.parentId === item.id);
                     const paidCount = parts.filter(sub => sub.paid).length;
                     
-                    let statusClass = 'sync-red';
-                    let badgeText = 'IMPAGO';
-                    let badgeClass = 'badge-red';
-
-                    if (paidCount > 0 && paidCount < parts.length) {
-                        statusClass = 'sync-yellow'; badgeText = 'PARCIAL'; badgeClass = 'badge-yellow';
-                    } else if (paidCount === parts.length && parts.length > 0) {
-                        statusClass = 'sync-green'; badgeText = 'LISTO'; badgeClass = 'badge-green';
-                    }
+                    let statusClass = 'sync-red'; let text = `0/${parts.length}`; let badge = 'badge-red';
+                    if (paidCount > 0 && paidCount < parts.length) { statusClass = 'sync-yellow'; text = 'PARCIAL'; badge = 'badge-yellow'; }
+                    else if (paidCount === parts.length && parts.length > 0) { statusClass = 'sync-green'; text = 'LISTO'; badge = 'badge-green'; }
 
                     const div = document.createElement('div');
                     div.className = `p-4 rounded-2xl border shadow-sm transition ${statusClass} relative`;
-                    
-                    const canManage = (currentUser.role === 'admin' || currentUser.role === 'partner');
-                    const deleteBtn = canManage ? `<button onclick="deleteGlobal('${item.id}')" class="absolute top-2 right-2 text-slate-300 hover:text-red-500 w-6 h-6 flex items-center justify-center rounded-full transition"><i class="fas fa-trash-alt text-xs"></i></button>` : '';
-
                     div.innerHTML = `
                         <div class="flex justify-between items-start">
                             <div>
                                 <h4 class="font-bold text-slate-700 leading-tight">${item.name}</h4>
                                 <p class="text-xs font-mono font-bold text-slate-400 mt-1">${formatMoney(item.amount)}</p>
                             </div>
-                            <span class="px-2 py-1 rounded text-[9px] font-bold uppercase ${badgeClass} mr-6">${badgeText}</span>
+                            <span class="px-2 py-1 rounded text-[9px] font-bold uppercase bg-white/50">${text}</span>
                         </div>
-                        ${deleteBtn}
+                        ${(HOUSE_ADMINS.includes(currentUser.email)) ? `<button onclick="deleteGlobal('${item.id}')" class="absolute top-2 right-2 text-slate-300 hover:text-red-500 w-6 h-6 flex items-center justify-center rounded-full transition"><i class="fas fa-trash-alt text-xs"></i></button>` : ''}
                     `;
                     houseList.appendChild(div);
                 }
 
-                if ((!isHouse && isMine) || (isHouse && !item.isParent && isMine)) {
-                    totalP += item.amount;
+                // 3. PANEL PERSONAL
+                if (isMine && !item.isParent && !isPending) {
+                    sumPersonal += item.amount;
                     const div = document.createElement('div');
                     const paidClass = item.paid ? 'card-personal-done' : 'card-personal-pending';
                     const icon = isHouse ? 'fa-home' : 'fa-user';
                     
-                    div.className = `card-personal p-3 rounded-2xl border flex justify-between items-center shadow-sm ${paidClass}`;
-                    div.onclick = () => togglePaid(item.id, item.paid);
+                    let statusLabel = '';
+                    if (item.type === 'custom_out' && item.approvalStatus === 'pending') statusLabel = '<span class="text-[9px] bg-orange-100 text-orange-600 px-1 rounded ml-2">Esperando...</span>';
+
+                    div.className = `p-3 rounded-2xl border flex justify-between items-center shadow-sm cursor-pointer transition ${paidClass}`;
+                    div.onclick = (e) => { if(!e.target.closest('button')) togglePaid(item.id, item.paid); };
 
                     div.innerHTML = `
                         <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-sm text-slate-400">
-                                <i class="fas ${item.paid ? 'fa-check text-green-500' : icon}"></i>
-                            </div>
+                            <i class="fas ${item.paid ? 'fa-check-circle text-emerald-600' : icon} text-lg opacity-70"></i>
                             <div>
-                                <p class="font-bold text-sm leading-tight">${item.name}</p>
-                                <p class="text-xs font-mono font-bold opacity-70">${formatMoney(item.amount)}</p>
+                                <p class="font-bold text-sm text-slate-700 ${item.paid ? 'line-through opacity-50' : ''}">${item.name}</p>
+                                <p class="text-xs font-mono font-bold text-slate-500">${formatMoney(item.amount)} ${statusLabel}</p>
                             </div>
                         </div>
+                        ${(!isHouse) ? `<button onclick="deleteItem('${item.id}')" class="text-slate-300 hover:text-red-500 text-xs"><i class="fas fa-trash"></i></button>` : ''}
                     `;
                     personalList.appendChild(div);
                 }
             });
 
-            document.getElementById('totalHouse').textContent = formatMoney(totalH);
-            document.getElementById('totalPersonal').textContent = formatMoney(totalP);
+            document.getElementById('totalPersonal').textContent = formatMoney(sumPersonal);
+            if (hasRequests) requestsPanel.classList.remove('hidden'); else requestsPanel.classList.add('hidden');
         }
 
-        window.prefill = (name, amount, isHouse, category) => {
-            if (isHouse && currentUser.role === 'user') return alert("Solo Admins pueden agregar gastos de casa.");
-            document.getElementById('inputName').value = name;
-            document.getElementById('inputAmount').value = amount;
-            document.getElementById('currentCategory').value = category || 'General';
-            window.setType(isHouse ? 'house' : 'personal');
-            if(!amount) document.getElementById('inputAmount').focus();
-        };
-
-        window.setType = (type) => {
-            document.getElementById('currentType').value = type;
-            const btnH = document.getElementById('btnTypeHouse');
-            const btnP = document.getElementById('btnTypePersonal');
-            if(type === 'house') {
-                btnH.className = "px-4 py-2 rounded-lg text-xs font-bold bg-white shadow-sm text-indigo-600 transition flex items-center gap-1";
-                btnP.className = "px-4 py-2 rounded-lg text-xs font-bold text-slate-400 hover:text-slate-600 transition flex items-center gap-1";
-            } else {
-                btnP.className = "px-4 py-2 rounded-lg text-xs font-bold bg-white shadow-sm text-emerald-600 transition flex items-center gap-1";
-                btnH.className = "px-4 py-2 rounded-lg text-xs font-bold text-slate-400 hover:text-slate-600 transition flex items-center gap-1";
-            }
-        };
-
+        // --- ACCIONES ---
         window.saveExpense = async () => {
             const name = document.getElementById('inputName').value;
             const amount = parseInt(document.getElementById('inputAmount').value);
-            const type = document.getElementById('currentType').value;
-            const category = document.getElementById('currentCategory').value;
+            const mode = document.getElementById('currentMode').value;
 
             if(!name || isNaN(amount)) return showToast("Falta info");
 
-            try {
-                const batch = writeBatch(db);
+            const batch = writeBatch(db);
+            const date = Date.now();
+
+            if (mode === 'house') {
+                if (!HOUSE_ADMINS.includes(currentUser.email)) return alert("Solo Admins");
                 
-                if (type === 'house' && SPLIT_USERS.includes(currentUser.email)) {
-                    const parentRef = doc(collection(db, "gastos"));
-                    batch.set(parentRef, {
-                        name: name, amount: amount, type: 'house', isParent: true, category: category,
-                        userId: 'HOUSE', month: selectedMonth, date: Date.now()
-                    });
-                    const half = Math.ceil(amount / 2);
-                    SPLIT_USERS.forEach(email => {
-                        const childRef = doc(collection(db, "gastos"));
-                        batch.set(childRef, {
-                            name: name, amount: half, type: 'house', isParent: false, category: category,
-                            parentId: parentRef.id, userId: email, month: selectedMonth, paid: false, date: Date.now()
-                        });
-                    });
-                    await learnPrice(name, amount);
-                } else {
-                    await addDoc(collection(db, "gastos"), {
-                        name: name, amount: amount, type: 'personal', category: category,
-                        userId: currentUser.email, month: selectedMonth, paid: false, date: Date.now()
-                    });
-                }
+                const parentRef = doc(collection(db, "gastos"));
+                batch.set(parentRef, { name, amount, type: 'house', isParent: true, userId: 'HOUSE', month: selectedMonth, date });
 
-                await batch.commit();
-                document.getElementById('inputName').value = '';
-                document.getElementById('inputAmount').value = '';
-                showToast("Guardado");
-            } catch(e) { console.error(e); }
+                HOUSE_SPLIT.forEach(userCfg => {
+                    const childRef = doc(collection(db, "gastos"));
+                    batch.set(childRef, {
+                        name, amount: Math.ceil(amount * userCfg.percent), type: 'house', isParent: false, parentId: parentRef.id,
+                        userId: userCfg.email, month: selectedMonth, paid: false, date, approvalStatus: 'approved'
+                    });
+                });
+                await learnPrice(name, amount);
+            } 
+            else if (mode === 'personal') {
+                await addDoc(collection(db, "gastos"), { name, amount, type: 'personal', userId: currentUser.email, month: selectedMonth, paid: false, date, approvalStatus: 'approved' });
+            }
+            else if (mode === 'custom') {
+                const participants = [currentUser.email, ...selectedParticipants];
+                const partAmount = Math.ceil(amount / participants.length);
+                participants.forEach(email => {
+                    const isMe = email === currentUser.email;
+                    const ref = doc(collection(db, "gastos"));
+                    batch.set(ref, {
+                        name: `${name} (Grupo)`, amount: partAmount, type: isMe ? 'personal' : 'custom_out', userId: email,
+                        month: selectedMonth, paid: false, date, requesterName: currentUser.name, approvalStatus: isMe ? 'approved' : 'pending'
+                    });
+                });
+            }
+
+            await batch.commit();
+            document.getElementById('inputName').value = ''; document.getElementById('inputAmount').value = ''; selectedParticipants = []; renderParticipants();
+            showToast("Guardado");
         };
 
-        window.exportTextReport = () => {
-            if (allData.length === 0) return showToast("Nada");
-            let text = `REPORTE FINANCIERO - ${selectedMonth}\n===================================\n\n`;
-            const totalH = allData.filter(e => e.isParent).reduce((s, e) => s + e.amount, 0);
-            const myTotal = allData.filter(e => (!e.isParent && e.userId === currentUser.email)).reduce((s, e) => s + e.amount, 0);
-            text += `GASTOS HOGAR: ${formatMoney(totalH)}\nMI BOLSILLO:  ${formatMoney(myTotal)}\n\nDETALLE:\n`;
-            allData.forEach(e => {
-                if (e.isParent || (e.type === 'personal' && e.userId === currentUser.email)) {
-                    let statusStr = "Pendiente";
-                    if(e.isParent) {
-                        const parts = allData.filter(sub => sub.parentId === e.id);
-                        const paidCount = parts.filter(sub => sub.paid).length;
-                        statusStr = (paidCount === parts.length) ? "PAGADO TOTAL" : "PARCIAL";
-                    } else { statusStr = e.paid ? "PAGADO" : "PENDIENTE"; }
-                    text += `${e.name.padEnd(20)} | ${formatMoney(e.amount).padEnd(10)} | ${statusStr}\n`;
-                }
+        window.approveItem = async (id) => { await updateDoc(doc(db, "gastos", id), { approvalStatus: 'approved' }); showToast("Aprobado"); };
+        window.togglePaid = async (id, s) => { await updateDoc(doc(db, "gastos", id), { paid: !s }); };
+        window.deleteItem = async (id) => { if(confirm("¿Eliminar?")) await deleteDoc(doc(db, "gastos", id)); };
+        window.deleteGlobal = async (pid) => { if(confirm("¿Borrar todo?")) { const b = writeBatch(db); b.delete(doc(db, "gastos", pid)); allData.filter(d=>d.parentId===pid).forEach(c=>b.delete(doc(db,"gastos",c.id))); await b.commit(); }};
+
+        async function loadPriceMemory() { try { const s = await getDoc(doc(db, "config", "precios_aprendidos")); if(s.exists()) priceMemory = s.data(); else BASE_SERVICES.forEach(s=>priceMemory[s.name]=s.amount); renderSmartButtons(); } catch(e){} }
+        async function learnPrice(name, amount) { priceMemory[name]=amount; try{await setDoc(doc(db,"config","precios_aprendidos"),priceMemory);renderSmartButtons();}catch(e){} }
+        
+        function renderSmartButtons() {
+            const c = document.getElementById('smartButtons'); c.innerHTML='';
+            BASE_SERVICES.forEach(s=>{
+                const amt = priceMemory[s.name]||s.amount;
+                const btn = document.createElement('button');
+                btn.className = "flex-shrink-0 bg-white border border-slate-200 text-slate-600 px-3 py-2 rounded-xl text-xs font-bold shadow-sm hover:border-indigo-300 hover:text-indigo-600 transition active:scale-95 flex flex-col items-center min-w-[70px]";
+                btn.onclick = () => prefill(s.name, amt);
+                btn.innerHTML = `<i class="fas ${s.icon} text-lg mb-1 opacity-50"></i><span>${s.name}</span><span class="text-[9px] font-mono text-slate-400 mt-0.5">$${Math.round(amt/1000)}k</span>`;
+                c.appendChild(btn);
             });
-            const blob = new Blob([text], { type: 'text/plain' });
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = `Reporte_${selectedMonth}.txt`;
-            link.click();
+        }
+        window.prefill = (n,a) => { document.getElementById('inputName').value=n; document.getElementById('inputAmount').value=a; window.setMode('house'); };
+        
+        window.exportTextReport = () => {
+            if(allData.length===0) return showToast("Nada");
+            let t = `REPORTE ${selectedMonth}\n================\n`;
+            allData.forEach(e => { if((e.isParent && e.type==='house')||(e.type!=='house'&&e.userId===currentUser.email)) t+=`${e.paid?'[OK]':'[  ]'} ${e.name} $${e.amount}\n`; });
+            const b = new Blob([t], {type:'text/plain'});
+            const l = document.createElement("a"); l.href=URL.createObjectURL(b); l.download=`Reporte.txt`; l.click();
         };
 
-        window.togglePaid = async (id, status) => { await updateDoc(doc(db, "gastos", id), { paid: !status }); };
-        window.deleteGlobal = async (parentId) => { if(confirm("¿Borrar?")) { const b = writeBatch(db); b.delete(doc(db, "gastos", parentId)); allData.filter(d=>d.parentId===parentId).forEach(c=>b.delete(doc(db,"gastos",c.id))); await b.commit(); }};
-        function formatMoney(val) { return new Intl.NumberFormat('es-CL', {style:'currency', currency:'CLP', maximumFractionDigits:0}).format(val); }
-        function showToast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.remove('-translate-y-4', 'opacity-0'); setTimeout(() => t.classList.add('-translate-y-4', 'opacity-0'), 3000); }
+        function formatMoney(v) { return new Intl.NumberFormat('es-CL', {style:'currency', currency:'CLP', maximumFractionDigits:0}).format(v); }
+        function showToast(m) { const t=document.getElementById('toast'); t.textContent=m; t.classList.remove('-translate-y-4','opacity-0'); setTimeout(()=>t.classList.add('-translate-y-4','opacity-0'),3000); }
     </script>
 </body>
 </html>
