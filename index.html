@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Finanzas Suite v34</title>
+    <title>Finanzas Suite</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
@@ -11,189 +11,200 @@
 
     <style>
         body { font-family: 'Outfit', sans-serif; background-color: #f8fafc; }
-        .fade-in { animation: fadeIn 0.4s ease-out; }
+        .fade-in { animation: fadeIn 0.3s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .hidden-view { display: none !important; }
         .hide-scroll::-webkit-scrollbar { display: none; }
         
-        /* Tarjeta de Notificación */
-        .card-request { background: #fff7ed; border-left: 6px solid #f97316; }
-        
-        /* Semáforo Hogar */
-        .sync-red { border-left: 6px solid #ef4444; background: #fff; }
-        .sync-yellow { border-left: 6px solid #f59e0b; background: #fffbeb; }
-        .sync-green { border-left: 6px solid #22c55e; background: #f0fdf4; opacity: 0.8; }
+        /* Semáforos */
+        .status-red { border-left: 5px solid #ef4444; background: #fff; }
+        .status-yellow { border-left: 5px solid #f59e0b; background: #fffbeb; }
+        .status-green { border-left: 5px solid #22c55e; background: #f0fdf4; opacity: 0.75; }
 
-        /* Estado Personal */
-        .card-personal-pending { background: white; border: 1px solid #e2e8f0; border-left: 4px solid #cbd5e1; }
-        .card-personal-done { background: #f0fdf4; border: 1px solid #dcfce7; border-left: 4px solid #22c55e; color: #166534; }
+        /* Categorías Visuales */
+        .cat-fixed { border-top: 3px solid #6366f1; } 
+        .cat-occasional { border-top: 3px solid #10b981; } 
+        .cat-credit { border-top: 3px solid #f59e0b; background-color: #fff7ed; }
 
-        /* Botones Selección */
-        .btn-select.selected { background-color: #4f46e5; color: white; border-color: #4f46e5; }
+        /* Botones Activos */
+        .filter-btn.active { background-color: #1e293b; color: white; }
+        .btn-select.selected { background-color: #4f46e5 !important; color: white !important; border-color: #4338ca !important; }
+
+        /* Check Personal */
+        .card-personal { transition: all 0.2s; border: 1px solid #e2e8f0; }
+        .card-personal-done { background: #ecfdf5; border-color: #10b981; color: #065f46; text-decoration: line-through; opacity: 0.6; }
     </style>
 </head>
-<body class="bg-slate-100 min-h-screen text-slate-800">
+<body class="bg-slate-100 min-h-screen text-slate-800 padding-top-safe">
+
+    <!-- DEV TOOLBAR (Oculta, solo para Admin logueado si se requiere en futuro) -->
+    <div id="devToolbar" class="hidden fixed top-0 left-0 right-0 bg-slate-900 z-50 p-2 shadow-xl flex justify-between items-center overflow-x-auto">
+        <span class="text-[10px] font-bold text-slate-400 uppercase mr-2 shrink-0">Admin Tools:</span>
+        <div class="flex gap-2">
+            <button onclick="switchUser('vicente8sanchez@gmail.com')" id="devBtnVicente" class="px-2 py-1 rounded text-[10px] font-bold bg-slate-700 text-white border border-slate-600 hover:bg-indigo-600 transition">Vicente</button>
+            <button onclick="switchUser('carlosinvictus50@gmail.com')" id="devBtnCarlos" class="px-2 py-1 rounded text-[10px] font-bold bg-slate-700 text-white border border-slate-600 hover:bg-purple-600 transition">Carlos</button>
+        </div>
+    </div>
 
     <!-- LOGIN -->
     <div id="view-login" class="flex flex-col items-center justify-center min-h-screen p-6 fade-in">
         <div class="bg-white p-8 rounded-3xl shadow-xl w-full max-w-sm text-center border border-slate-100">
-            <div class="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                <i class="fas fa-wallet text-4xl text-indigo-600"></i>
+            <div class="w-16 h-16 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-wallet text-3xl text-indigo-600"></i>
             </div>
-            <h1 class="text-3xl font-extrabold text-slate-800 mb-2">Finanzas Suite</h1>
-            <p class="text-slate-400 text-sm mb-8">Gestión Inteligente</p>
-            <button onclick="loginWithGoogle()" class="w-full bg-white border border-slate-300 text-slate-700 font-bold py-4 rounded-xl shadow-sm hover:bg-slate-50 flex items-center justify-center gap-3 transition active:scale-95 group">
-                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-6 h-6 group-hover:scale-110 transition">
-                Entrar con Google
-            </button>
+            <h1 class="text-2xl font-extrabold text-slate-800 mb-1">Finanzas Suite</h1>
+            <p class="text-slate-400 text-xs mb-6">Control Total v45</p>
+            
+            <div class="grid grid-cols-1 gap-3">
+                <button onclick="loginWithGoogle()" class="w-full bg-slate-900 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-black flex items-center justify-center gap-2 transition active:scale-95 text-sm">
+                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5"> Entrar con Google
+                </button>
+            </div>
+            <p id="login-error" class="text-red-500 text-xs mt-3 hidden font-mono bg-red-50 p-2 rounded text-center border border-red-200"></p>
         </div>
     </div>
 
     <!-- APP PRINCIPAL -->
-    <div id="view-app" class="hidden-view pb-32 fade-in">
+    <div id="view-app" class="hidden-view pb-32 pt-10 fade-in">
         
         <!-- Navbar -->
-        <nav class="bg-white sticky top-0 z-30 px-5 py-4 shadow-sm border-b border-slate-100 flex justify-between items-center">
+        <nav class="bg-white sticky top-10 z-30 px-5 py-3 shadow-sm border-b border-slate-100 flex justify-between items-center">
             <div class="flex items-center gap-3">
-                <img id="userPhoto" src="" class="w-10 h-10 rounded-full border-2 border-slate-200">
+                <img id="userPhoto" src="" class="w-9 h-9 rounded-full border-2 border-slate-200 bg-slate-100">
                 <div class="leading-tight">
-                    <p class="text-[10px] uppercase font-bold text-slate-400">Hola</p>
+                    <p class="text-[9px] uppercase font-bold text-slate-400" id="devLabel">Perfil</p>
                     <p id="userName" class="font-bold text-slate-800 text-sm">Usuario</p>
                 </div>
             </div>
             <div class="flex gap-2 items-center">
-                <button onclick="exportTextReport()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center transition"><i class="fas fa-download text-xs"></i></button>
+                <button onclick="toggleNotifications()" class="relative w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center transition">
+                    <i class="fas fa-bell text-xs"></i>
+                    <div id="notifBadge" class="hidden notification-badge" style="position:absolute; top:0; right:0; width:8px; height:8px; background:red; border-radius:50%;"></div>
+                </button>
                 <div class="bg-slate-100 rounded-lg px-2 py-1">
                     <input type="month" id="monthSelector" class="bg-transparent text-xs font-bold text-slate-600 outline-none cursor-pointer" onchange="changeMonth()">
                 </div>
+                <button onclick="logout()" class="w-8 h-8 rounded-full bg-red-50 text-red-500 hover:bg-red-100 flex items-center justify-center transition"><i class="fas fa-power-off text-xs"></i></button>
             </div>
         </nav>
 
-        <main class="p-5 max-w-6xl mx-auto space-y-6">
+        <!-- Notificaciones -->
+        <div id="notificationsPanel" class="hidden bg-slate-800 text-white p-4 fixed top-[110px] left-4 right-4 z-40 shadow-2xl rounded-2xl animate-fade-in-down border border-slate-700">
+            <h3 class="text-xs font-bold uppercase tracking-widest mb-3 text-orange-400">Solicitudes Pendientes</h3>
+            <div id="requestsList" class="space-y-2"></div>
+        </div>
 
-            <!-- 1. BUZÓN DE APROBACIONES -->
-            <div id="requestsPanel" class="hidden space-y-3">
-                <div class="flex items-center gap-2 px-1 animate-pulse">
-                    <span class="w-2 h-2 rounded-full bg-orange-500"></span>
-                    <h3 class="text-xs font-bold text-orange-600 uppercase tracking-widest">Requiere tu Aprobación</h3>
-                </div>
-                <div id="requestsList" class="space-y-3"></div>
-            </div>
+        <main class="p-4 max-w-6xl mx-auto space-y-5">
 
-            <!-- 2. SUELDO -->
-            <div class="bg-slate-800 p-6 rounded-3xl shadow-lg relative overflow-hidden text-white">
-                <div class="absolute top-0 right-0 p-4 opacity-10"><i class="fas fa-money-bill-wave text-6xl"></i></div>
-                
-                <div class="flex justify-between items-start mb-4 relative z-10">
-                    <div>
-                        <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Sueldo Líquido</p>
-                        <div class="flex items-center gap-2">
-                            <span class="text-slate-400 text-xl">$</span>
-                            <input type="number" id="salaryInput" class="bg-transparent text-3xl font-extrabold text-white w-40 outline-none border-b border-slate-600 focus:border-emerald-400 transition" placeholder="0" onchange="updateSalary()">
+            <!-- 1. DASHBOARD -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-slate-800 p-5 rounded-3xl shadow-lg relative overflow-hidden text-white">
+                    <div class="flex justify-between items-start mb-3 relative z-10">
+                        <div>
+                            <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1">Líquido</p>
+                            <div class="flex items-center gap-1">
+                                <span class="text-slate-400 text-lg">$</span>
+                                <input type="number" id="salaryInput" class="bg-transparent text-2xl font-extrabold text-white w-32 outline-none border-b border-slate-600 focus:border-emerald-400 transition" placeholder="0" onchange="updateSalary()">
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-[10px] text-slate-400 uppercase font-bold">Disponible</p>
+                            <p class="text-2xl font-bold text-emerald-400" id="salaryRemaining">$0</p>
                         </div>
                     </div>
-                    <div class="text-right">
-                        <p class="text-xs text-slate-400 uppercase font-bold">Disponible Real</p>
-                        <p class="text-2xl font-bold text-emerald-400" id="salaryRemaining">$0</p>
+                    <div class="w-full bg-slate-700 h-1.5 rounded-full overflow-hidden mb-1">
+                        <div id="salaryBar" class="h-full bg-emerald-500 transition-all duration-700" style="width: 0%"></div>
                     </div>
                 </div>
-                <!-- Barra -->
-                <div class="w-full bg-slate-700 h-2 rounded-full overflow-hidden">
-                    <div id="salaryBar" class="h-full bg-emerald-500 transition-all duration-700" style="width: 0%"></div>
-                </div>
-                <div class="flex justify-between text-[10px] font-bold text-slate-400 uppercase">
-                    <span>Gastado (Pagado): <span id="salarySpent" class="text-white">$0</span></span>
-                    <span id="salaryPercent">0%</span>
+
+                <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col justify-center">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Presupuestos</h3>
+                        <button onclick="addBudget()" class="text-[10px] text-blue-500 font-bold bg-blue-50 px-2 py-1 rounded hover:bg-blue-100">+ Meta</button>
+                    </div>
+                    <div id="budgetsList" class="space-y-2 overflow-y-auto max-h-24 hide-scroll text-xs"><div class="text-center text-slate-300 italic">Cargando...</div></div>
                 </div>
             </div>
 
-            <!-- 3. PANEL DE ACCIÓN -->
+            <!-- 2. FORMULARIO -->
             <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 relative z-10">
-                <div class="flex justify-between items-center mb-3">
-                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Nuevo Movimiento</p>
-                    <span id="loadingDefaults" class="text-[10px] text-blue-500 animate-pulse hidden">Sync...</span>
-                </div>
                 
-                <!-- Botones Dinámicos -->
-                <div id="smartButtons" class="flex gap-2 overflow-x-auto hide-scroll mb-4 pb-1"></div>
+                <!-- Categorías -->
+                <div class="flex gap-2 mb-4 overflow-x-auto hide-scroll">
+                    <button onclick="setCategory('fixed')" id="btnCatFixed" class="flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-bold bg-indigo-600 text-white transition">Fijo</button>
+                    <button onclick="setCategory('occasional')" id="btnCatOccasional" class="flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-bold bg-slate-100 text-slate-500 transition">Ocasional</button>
+                    <button onclick="setCategory('credit')" id="btnCatCredit" class="flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-bold bg-slate-100 text-slate-500 transition">Crédito</button>
+                </div>
+                <input type="hidden" id="currentCategory" value="fixed">
 
-                <!-- Toggle Tipo -->
-                <div class="flex gap-2 mb-4">
-                    <button onclick="setMode('personal')" id="btnModePersonal" class="flex-1 py-3 rounded-xl border-2 text-xs font-bold transition flex flex-col items-center justify-center gap-1 border-emerald-500 bg-emerald-50 text-emerald-700">
-                        <i class="fas fa-user"></i> Mío
-                    </button>
-                    <button onclick="setMode('house')" id="btnModeHouse" class="flex-1 py-3 rounded-xl border-2 text-xs font-bold transition flex flex-col items-center justify-center gap-1 border-slate-100 text-slate-400">
-                        <i class="fas fa-home"></i> Casa (Split)
-                    </button>
-                    <button onclick="setMode('custom')" id="btnModeCustom" class="flex-1 py-3 rounded-xl border-2 text-xs font-bold transition flex flex-col items-center justify-center gap-1 border-slate-100 text-slate-400">
-                        <i class="fas fa-users"></i> Grupo
-                    </button>
+                <div id="smartButtonsContainer">
+                    <div id="smartButtons" class="flex gap-2 overflow-x-auto hide-scroll mb-4 pb-1"></div>
                 </div>
 
-                <!-- Info Split Casa -->
-                <div id="houseSplitInfo" class="hidden mb-4 bg-indigo-50 p-3 rounded-xl border border-indigo-100 text-xs text-indigo-800">
-                    <p class="font-bold mb-1"><i class="fas fa-info-circle"></i> Distribución Automática:</p>
-                    <ul class="list-disc list-inside opacity-80">
-                        <li>Carlos: 50%</li>
-                        <li>Vicente: 25%</li>
-                        <li>Anabel: 25%</li>
-                    </ul>
-                </div>
-
-                <!-- Selector Grupo -->
-                <div id="customGroupSelector" class="hidden mb-4 bg-slate-50 p-3 rounded-xl">
-                    <p class="text-[10px] font-bold text-slate-400 uppercase mb-2">Solicitar a:</p>
-                    <div class="flex gap-2 flex-wrap" id="participantsContainer"></div>
-                </div>
-
-                <!-- Inputs -->
-                <div class="flex gap-3">
+                <div class="flex gap-3 mb-3">
                     <input type="text" id="inputName" placeholder="Concepto" class="w-full p-3 bg-slate-50 rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-indigo-100 transition">
                     <input type="number" id="inputAmount" placeholder="$ Total" class="w-1/3 p-3 bg-slate-50 rounded-xl font-bold text-center text-sm outline-none focus:ring-2 focus:ring-indigo-100 transition">
                 </div>
+
+                <div id="installmentsPanel" class="hidden mb-3 bg-orange-50 p-2 rounded-xl border border-orange-100 flex items-center justify-between px-3">
+                    <span class="text-xs font-bold text-orange-700">Cuotas:</span>
+                    <select id="inputInstallments" class="bg-white border border-orange-200 text-orange-700 font-bold text-xs rounded-lg px-2 py-1 outline-none">
+                        <option value="2">2</option><option value="3">3</option><option value="6">6</option><option value="12">12</option>
+                        <option value="24">24</option>
+                    </select>
+                </div>
                 
-                <button onclick="saveExpense()" class="w-full mt-3 bg-slate-900 text-white py-3 rounded-xl font-bold hover:bg-black transition shadow-lg active:scale-95">
-                    <i class="fas fa-plus mr-2"></i> Procesar Gasto
+                <div class="flex gap-2 mb-4">
+                    <button onclick="setMode('personal')" id="btnModePersonal" class="flex-1 py-2.5 rounded-xl border-2 text-[10px] uppercase font-bold transition border-emerald-500 bg-emerald-50 text-emerald-700">Mío</button>
+                    <button onclick="setMode('house')" id="btnModeHouse" class="flex-1 py-2.5 rounded-xl border-2 text-[10px] uppercase font-bold transition border-slate-100 text-slate-400">Hogar</button>
+                    <button onclick="setMode('custom')" id="btnModeCustom" class="flex-1 py-2.5 rounded-xl border-2 text-[10px] uppercase font-bold transition border-slate-100 text-slate-400">Grupo</button>
+                </div>
+
+                <div id="customGroupSelector" class="hidden mb-4 bg-slate-50 p-3 rounded-xl">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase mb-2">Cobrar a:</p>
+                    <div class="flex gap-2 flex-wrap" id="participantsContainer"></div>
+                </div>
+                
+                <button onclick="saveExpense()" class="w-full bg-slate-900 text-white py-3 rounded-xl font-bold hover:bg-black transition shadow-lg active:scale-95 text-sm">
+                    REGISTRAR
                 </button>
                 <input type="hidden" id="currentMode" value="personal">
             </div>
 
-            <!-- 4. LISTAS -->
+            <!-- 3. LISTAS -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                
-                <!-- GASTOS HOGAR -->
-                <div class="space-y-4">
-                    <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest px-2">Estado del Hogar</h3>
+                <!-- HOGAR -->
+                <div class="space-y-3">
+                    <div class="flex justify-between px-2 items-center">
+                        <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Hogar</h3>
+                        <div class="flex gap-1">
+                            <button onclick="filterHouse('all')" class="filter-btn active text-[9px] font-bold px-2 py-1 rounded bg-slate-800 text-white" id="filterAll">Todo</button>
+                            <button onclick="filterHouse('pending')" class="filter-btn text-[9px] font-bold px-2 py-1 rounded bg-slate-200 text-slate-500" id="filterPending">Pendiente</button>
+                        </div>
+                    </div>
                     <div id="houseList" class="space-y-3"></div>
                 </div>
 
-                <!-- MIS PAGOS -->
-                <div class="space-y-4">
-                    <div class="flex justify-between px-2">
-                        <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest">Mis Pagos</h3>
+                <!-- PERSONAL -->
+                <div class="space-y-3">
+                    <div class="flex justify-between px-2 items-center">
+                        <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Mi Bolsillo</h3>
                         <span id="totalPersonal" class="text-xs font-bold text-emerald-600">$0</span>
                     </div>
                     <div id="personalList" class="space-y-3"></div>
                 </div>
-
             </div>
 
         </main>
     </div>
 
-    <!-- TOAST -->
-    <div id="toast" class="fixed top-6 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-6 py-3 rounded-full shadow-2xl text-xs font-bold opacity-0 transition-all pointer-events-none z-50 -translate-y-4 flex items-center gap-2">
-        <span id="toastMsg">Mensaje</span>
-    </div>
+    <div id="toast" class="fixed top-6 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-6 py-3 rounded-full shadow-2xl text-xs font-bold opacity-0 transition-all pointer-events-none z-50 -translate-y-4"></div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, where, doc, updateDoc, deleteDoc, setDoc, getDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, where, doc, updateDoc, deleteDoc, setDoc, getDoc, writeBatch, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-        // ==========================================
-        // 1. TUS CREDENCIALES (PEGA AQUÍ)
-        // ==========================================
         const firebaseConfig = {
             apiKey: "AIzaSyALsMoeqqLpQge9hMocUHSjmqnpJXNJ9p4",
             authDomain: "control-mensual-ae833.firebaseapp.com",
@@ -203,39 +214,26 @@
             appId: "1:909368343478:web:0733b7a0a57cec5893df17"
         };
 
-        // ==========================================
-        // 2. CONFIGURACIÓN FAMILIA (IMPORTANTE)
-        // ==========================================
-        const EMAILS = {
-            VICENTE: 'vicente8sanchez@gmail.com',
-            CARLOS:  'carlosinvictus50@gmail.com',
-            ANABEL:  'anabellc.nc@gmail.com',
-            JP:      'juanpapino10@gmail.com'
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+        // EMAILS REALES
+        const FAMILY_CONFIG = {
+            'vicente8sanchez@gmail.com': { name: 'Vicente', role: 'admin' },
+            'carlosinvictus50@gmail.com': { name: 'Carlos',  role: 'partner' },
+            'anabellc.nc@gmail.com': { name: 'Anabel',  role: 'user' },
+            'juanpapino10@gmail.com': { name: 'JP',      role: 'user' }
         };
 
-        const USERS = [
-            { email: EMAILS.VICENTE, name: 'Vicente', role: 'admin' },
-            { email: EMAILS.CARLOS,  name: 'Carlos',  role: 'partner' },
-            { email: EMAILS.ANABEL,  name: 'Anabel',  role: 'user' },
-            { email: EMAILS.JP,      name: 'JP',      role: 'user' }
-        ];
-
-        // Definimos quiénes pagan el gasto de casa y cuánto
-        const HOUSE_SPLIT = [
-            { email: EMAILS.CARLOS,  percent: 0.50 }, // 50%
-            { email: EMAILS.VICENTE, percent: 0.25 }, // 25%
-            { email: EMAILS.ANABEL,  percent: 0.25 }  // 25%
-        ];
-
-        const HOUSE_ADMINS = [EMAILS.VICENTE, EMAILS.CARLOS]; 
+        const SPLIT_USERS = ['vicente8sanchez@gmail.com', 'carlosinvictus50@gmail.com']; 
+        const USERS = Object.entries(FAMILY_CONFIG).map(([email, data]) => ({ email, ...data }));
 
         const BASE_SERVICES = [
-            { name: 'Arriendo', amount: 350000, icon: 'fa-home' },
-            { name: 'Luz', amount: 45000, icon: 'fa-lightbulb' },
-            { name: 'Agua', amount: 25000, icon: 'fa-faucet' },
-            { name: 'Gas', amount: 60000, icon: 'fa-fire' },
-            { name: 'Internet', amount: 30000, icon: 'fa-wifi' },
-            { name: 'GC', amount: 90000, icon: 'fa-building' }
+            { name: 'Arriendo', amount: 350000, icon: 'fa-home', cat: 'fixed' },
+            { name: 'Luz', amount: 45000, icon: 'fa-lightbulb', cat: 'fixed' },
+            { name: 'Agua', amount: 25000, icon: 'fa-faucet', cat: 'fixed' },
+            { name: 'Gas', amount: 60000, icon: 'fa-fire', cat: 'fixed' },
+            { name: 'Internet', amount: 30000, icon: 'fa-wifi', cat: 'fixed' },
+            { name: 'GC', amount: 90000, icon: 'fa-building', cat: 'fixed' }
         ];
 
         const app = initializeApp(firebaseConfig);
@@ -244,309 +242,297 @@
         const provider = new GoogleAuthProvider();
 
         let currentUser = null;
-        let selectedMonth = new Date().toISOString().slice(0, 7);
+        let testEmailTarget = null;
+        const now = new Date();
+        const offset = now.getTimezoneOffset() * 60000;
+        const localDate = new Date(now.getTime() - offset);
+        let selectedMonth = localDate.toISOString().slice(0, 7); 
+        
         let allData = [];
         let priceMemory = {};
+        let budgets = {};
         let salaryData = 0;
         let selectedParticipants = [];
+        let houseFilter = 'all';
+
+        // HELPER DB
+        function getCollection(name) { return collection(db, 'artifacts', appId, 'public', 'data', name); }
+        function getDocument(colName, docId) { return doc(db, 'artifacts', appId, 'public', 'data', colName, docId); }
+        function getNewDoc(colName) { return doc(getCollection(colName)); }
 
         // AUTH
-        window.loginWithGoogle = async () => { try { await signInWithPopup(auth, provider); } catch(e){ alert(e.message); } };
-        window.logout = () => signOut(auth);
+        window.loginWithGoogle = async () => { try { await signInWithPopup(auth, provider); } catch(e){ showError(e.message); } };
+        window.switchUser = (email) => { testEmailTarget = email; signInAnonymously(auth).catch(e=>showError(e.message)); };
+        window.logout = () => { testEmailTarget = null; signOut(auth); };
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                const config = USERS.find(u => u.email === user.email);
-                if (config) {
-                    currentUser = { ...user, ...config };
+                let email = user.email;
+                let isTest = false;
+                if (user.isAnonymous && testEmailTarget) { email = testEmailTarget; isTest = true; }
+                email = email ? email.toLowerCase() : '';
+                if (FAMILY_CONFIG[email]) {
+                    currentUser = { ...user, email, ...FAMILY_CONFIG[email], isTest };
                     initUI();
                 } else {
-                    alert("No autorizado"); signOut(auth);
+                    if(!isTest) { alert("Correo no autorizado"); signOut(auth); }
                 }
             } else {
                 document.getElementById('view-app').classList.add('hidden-view');
                 document.getElementById('view-login').classList.remove('hidden-view');
+                document.getElementById('devToolbar').classList.add('hidden');
             }
         });
 
         async function initUI() {
             document.getElementById('view-login').classList.add('hidden-view');
             document.getElementById('view-app').classList.remove('hidden-view');
-            document.getElementById('userPhoto').src = currentUser.photoURL;
+            document.getElementById('userPhoto').src = currentUser.photoURL || `https://ui-avatars.com/api/?name=${currentUser.name}&background=random`;
             document.getElementById('userName').textContent = currentUser.name;
             document.getElementById('monthSelector').value = selectedMonth;
-
-            // Restricción de botones para usuarios
+            
+            if(currentUser.isTest || currentUser.role === 'admin') document.getElementById('devToolbar').classList.remove('hidden');
+            
             if (currentUser.role === 'user') {
                 document.getElementById('btnModeHouse').classList.add('hidden');
                 window.setMode('personal');
+            } else {
+                document.getElementById('btnModeHouse').classList.remove('hidden');
             }
 
-            renderParticipants(); 
-            await loadSalary();
-            await loadPriceMemory();
+            renderParticipants();
+            await Promise.all([loadSalary(), loadBudgets(), loadPriceMemory()]);
             listenData();
+            listenNotifications();
+            await checkRecurringExpenses();
         }
 
-        // --- GESTIÓN SALARIO ---
-        async function loadSalary() {
-            try {
-                const docId = `salary_${currentUser.email}_${selectedMonth}`;
-                const docSnap = await getDoc(doc(db, "salaries", docId));
-                salaryData = docSnap.exists() ? docSnap.data().amount : 0;
-                document.getElementById('salaryInput').value = salaryData > 0 ? salaryData : '';
-                updateSalaryUI();
-            } catch(e) {}
-        }
-
-        window.updateSalary = async () => {
-            const amount = parseInt(document.getElementById('salaryInput').value) || 0;
-            salaryData = amount;
-            const docId = `salary_${currentUser.email}_${selectedMonth}`;
-            await setDoc(doc(db, "salaries", docId), { amount: amount });
-            updateSalaryUI();
-        };
-
-        function updateSalaryUI() {
-            const myPaid = allData.filter(e => 
-                e.userId === currentUser.email && 
-                e.paid && 
-                e.approvalStatus !== 'pending'
-            );
-            const spent = myPaid.reduce((sum, e) => sum + e.amount, 0);
-            const remaining = salaryData - spent;
-            const percent = salaryData > 0 ? (spent / salaryData) * 100 : 0;
-
-            document.getElementById('salaryRemaining').textContent = formatMoney(remaining);
-            document.getElementById('salarySpent').textContent = formatMoney(spent);
-            document.getElementById('salaryPercent').textContent = `${Math.round(percent)}%`;
-            document.getElementById('salaryBar').style.width = `${Math.min(percent, 100)}%`;
-            
-            const bar = document.getElementById('salaryBar');
-            bar.style.backgroundColor = percent > 90 ? '#ef4444' : (percent > 60 ? '#f59e0b' : '#10b981');
-        }
-
-        // --- UI BOTONES ---
-        window.setMode = (mode) => {
-            document.getElementById('currentMode').value = mode;
-            const btns = ['btnModePersonal', 'btnModeHouse', 'btnModeCustom'];
-            btns.forEach(id => {
-                const el = document.getElementById(id);
-                if(el) el.className = "flex-1 py-3 rounded-xl border-2 text-xs font-bold transition flex flex-col items-center justify-center gap-1 border-slate-100 text-slate-400";
-            });
-            
-            document.getElementById('customGroupSelector').classList.add('hidden');
-            document.getElementById('houseSplitInfo').classList.add('hidden');
-
-            if (mode === 'personal') {
-                document.getElementById('btnModePersonal').className = "flex-1 py-3 rounded-xl border-2 text-xs font-bold transition flex flex-col items-center justify-center gap-1 border-emerald-500 bg-emerald-50 text-emerald-700";
-            } else if (mode === 'house') {
-                document.getElementById('btnModeHouse').className = "flex-1 py-3 rounded-xl border-2 text-xs font-bold transition flex flex-col items-center justify-center gap-1 border-indigo-500 bg-indigo-50 text-indigo-700";
-                document.getElementById('houseSplitInfo').classList.remove('hidden');
-            } else if (mode === 'custom') {
-                document.getElementById('btnModeCustom').className = "flex-1 py-3 rounded-xl border-2 text-xs font-bold transition flex flex-col items-center justify-center gap-1 border-purple-500 bg-purple-50 text-purple-700";
-                document.getElementById('customGroupSelector').classList.remove('hidden');
-            }
-        };
-
-        function renderParticipants() {
-            const c = document.getElementById('participantsContainer'); c.innerHTML='';
-            USERS.forEach(u => {
-                if(u.email === currentUser.email) return; 
-                const btn = document.createElement('button');
-                btn.className = "btn-select px-3 py-2 rounded-lg border bg-white text-xs font-bold text-slate-500";
-                btn.textContent = u.name;
-                btn.onclick = () => {
-                    btn.classList.toggle('selected');
-                    if(btn.classList.contains('selected')) selectedParticipants.push(u.email);
-                    else selectedParticipants = selectedParticipants.filter(e => e !== u.email);
-                };
-                c.appendChild(btn);
-            });
-        }
-
-        // --- CORE DATA ---
-        window.changeMonth = () => { selectedMonth = document.getElementById('monthSelector').value; loadSalary(); listenData(); };
-
+        // DATA
         function listenData() {
-            const q = query(collection(db, "gastos"), where("month", "==", selectedMonth));
+            const q = query(getCollection("gastos"), where("month", "==", selectedMonth));
             onSnapshot(q, (snapshot) => {
                 allData = [];
                 snapshot.forEach(doc => allData.push({ id: doc.id, ...doc.data() }));
+                if(allData.length>0) console.log(`Loaded ${allData.length}`);
                 renderLists();
                 updateSalaryUI();
+                renderBudgets();
+            }, (error) => showError("Error DB: " + error.message));
+        }
+
+        function listenNotifications() {
+            const q = query(getCollection("gastos"), where("userId", "==", currentUser.email), where("approvalStatus", "==", "pending"));
+            onSnapshot(q, (snap) => {
+                const reqs = []; snap.forEach(d => reqs.push({id:d.id, ...d.data()}));
+                renderNotifications(reqs);
             });
         }
 
         function renderLists() {
-            const houseList = document.getElementById('houseList');
-            const personalList = document.getElementById('personalList');
-            const requestsList = document.getElementById('requestsList');
-            const requestsPanel = document.getElementById('requestsPanel');
-            
-            houseList.innerHTML = ''; personalList.innerHTML = ''; requestsList.innerHTML = '';
-            let hasRequests = false; let sumPersonal = 0;
+            const houseContainer = document.getElementById('houseList');
+            const personalContainer = document.getElementById('personalList');
+            houseContainer.innerHTML = ''; personalContainer.innerHTML = '';
+            let sumPersonal = 0;
 
             const myExpenses = allData.filter(e => e.type === 'house' || e.userId === currentUser.email);
+            myExpenses.sort((a,b) => b.amount - a.amount);
+
+            if (myExpenses.length === 0) {
+                 houseContainer.innerHTML = '<div class="text-center py-6 text-slate-300 text-xs italic">Sin gastos este mes</div>';
+                 personalContainer.innerHTML = '<div class="text-center py-6 text-slate-300 text-xs italic">Sin gastos este mes</div>';
+            }
 
             myExpenses.forEach(item => {
                 const isHouse = item.type === 'house';
                 const isMine = item.userId === currentUser.email;
-                const isPending = item.approvalStatus === 'pending';
 
-                // 1. SOLICITUDES
-                if (isMine && isPending) {
-                    hasRequests = true;
-                    const div = document.createElement('div');
-                    div.className = "card-request p-4 rounded-xl flex justify-between items-center shadow-sm";
-                    div.innerHTML = `
-                        <div>
-                            <p class="text-[10px] font-bold text-orange-600 uppercase">Solicitud de ${item.requesterName || 'Alguien'}</p>
-                            <h4 class="font-bold text-slate-800">${item.name}</h4>
-                            <p class="text-xs font-mono font-bold text-slate-500">${formatMoney(item.amount)}</p>
-                        </div>
-                        <div class="flex gap-2">
-                            <button onclick="deleteItem('${item.id}', false)" class="w-8 h-8 rounded-full bg-white text-red-500 flex items-center justify-center hover:bg-red-50"><i class="fas fa-times"></i></button>
-                            <button onclick="approveItem('${item.id}')" class="w-8 h-8 rounded-full bg-white text-green-500 flex items-center justify-center hover:bg-green-50 shadow-sm"><i class="fas fa-check"></i></button>
-                        </div>
-                    `;
-                    requestsList.appendChild(div);
-                    return; 
-                }
-
-                // 2. PANEL HOGAR
-                if (isHouse && item.isParent) {
-                    const parts = allData.filter(sub => sub.parentId === item.id);
-                    const paidCount = parts.filter(sub => sub.paid).length;
+                // PANEL HOGAR (Mejorado para ver estados antiguos)
+                // Se muestra si es Parent (moderno) O si es un gasto de casa "huérfano" (antiguo)
+                if (isHouse && (item.isParent || (!item.parentId && !item.isParent))) {
+                    const parts = allData.filter(d => d.parentId === item.id);
+                    const paidCount = parts.filter(d => d.paid).length;
                     
-                    let statusClass = 'sync-red'; let text = `0/${parts.length}`; let badge = 'badge-red';
-                    if (paidCount > 0 && paidCount < parts.length) { statusClass = 'sync-yellow'; text = 'PARCIAL'; badge = 'badge-yellow'; }
-                    else if (paidCount === parts.length && parts.length > 0) { statusClass = 'sync-green'; text = 'LISTO'; badge = 'badge-green'; }
+                    if (houseFilter === 'pending' && paidCount === parts.length && parts.length > 0) return;
+
+                    let statusClass='status-red', text='IMPAGO', badge='bg-red-100 text-red-600';
+                    
+                    // Lógica de estado robusta para antiguos y nuevos
+                    if (parts.length > 0) {
+                        if (paidCount > 0 && paidCount < parts.length) { statusClass='status-yellow'; text='PARCIAL'; badge='bg-amber-100 text-amber-700'; }
+                        else if (paidCount === parts.length) { statusClass='status-green'; text='LISTO'; badge='bg-emerald-100 text-emerald-700'; }
+                    } else {
+                        // Legacy fallback
+                         if(item.paid) { statusClass='status-green'; text='PAGADO'; badge='bg-emerald-100 text-emerald-700'; }
+                    }
 
                     const div = document.createElement('div');
                     div.className = `p-4 rounded-2xl border shadow-sm transition ${statusClass} relative`;
                     div.innerHTML = `
                         <div class="flex justify-between items-start">
-                            <div>
-                                <h4 class="font-bold text-slate-700 leading-tight">${item.name}</h4>
-                                <p class="text-xs font-mono font-bold text-slate-400 mt-1">${formatMoney(item.amount)}</p>
-                            </div>
-                            <span class="px-2 py-1 rounded text-[9px] font-bold uppercase bg-white/50">${text}</span>
+                            <div><h4 class="font-bold text-slate-700 leading-tight">${item.name}</h4><p class="text-xs font-mono font-bold text-slate-400 mt-1">${formatMoney(item.amount)}</p></div>
+                            <span class="px-2 py-1 rounded text-[9px] font-bold uppercase ${badge}">${text}</span>
                         </div>
-                        ${(HOUSE_ADMINS.includes(currentUser.email)) ? `<button onclick="deleteGlobal('${item.id}')" class="absolute top-2 right-2 text-slate-300 hover:text-red-500 w-6 h-6 flex items-center justify-center rounded-full transition"><i class="fas fa-trash-alt text-xs"></i></button>` : ''}
+                        ${(SPLIT_USERS.includes(currentUser.email)) ? `<button onclick="deleteGlobal('${item.id}')" class="absolute top-2 right-2 text-slate-300 hover:text-red-500 w-6 h-6 flex items-center justify-center rounded-full transition"><i class="fas fa-trash-alt text-xs"></i></button>` : ''}
                     `;
-                    houseList.appendChild(div);
+                    houseContainer.appendChild(div);
                 }
 
-                // 3. PANEL PERSONAL
-                if (isMine && !item.isParent && !isPending) {
+                // PANEL PERSONAL
+                if (isMine && !item.isParent && item.approvalStatus !== 'pending') {
                     sumPersonal += item.amount;
-                    const div = document.createElement('div');
                     const paidClass = item.paid ? 'card-personal-done' : 'card-personal-pending';
-                    const icon = isHouse ? 'fa-home' : 'fa-user';
-                    
-                    let statusLabel = '';
-                    if (item.type === 'custom_out' && item.approvalStatus === 'pending') statusLabel = '<span class="text-[9px] bg-orange-100 text-orange-600 px-1 rounded ml-2">Esperando...</span>';
+                    let catClass = '';
+                    if(item.category==='fixed') catClass='cat-fixed';
+                    if(item.category==='occasional') catClass='cat-occasional';
+                    if(item.category==='credit') catClass='cat-credit';
 
-                    div.className = `p-3 rounded-2xl border flex justify-between items-center shadow-sm cursor-pointer transition ${paidClass}`;
+                    const div = document.createElement('div');
+                    div.className = `p-3 rounded-2xl flex justify-between items-center shadow-sm cursor-pointer transition ${paidClass} ${catClass}`;
                     div.onclick = (e) => { if(!e.target.closest('button')) togglePaid(item.id, item.paid); };
+                    
+                    // Botón borrar universal (FIX BORRADO ZOMBIE)
+                    const deleteBtn = `<button onclick="deleteItem('${item.id}','${item.groupId}', '${item.type}', '${item.parentId}')" class="text-slate-300 hover:text-red-500 text-xs ml-2"><i class="fas fa-trash"></i></button>`;
 
                     div.innerHTML = `
                         <div class="flex items-center gap-3">
-                            <i class="fas ${item.paid ? 'fa-check-circle text-emerald-600' : icon} text-lg opacity-70"></i>
+                            <i class="fas ${item.paid ? 'fa-check-circle' : 'fa-circle'} text-lg opacity-70"></i>
                             <div>
-                                <p class="font-bold text-sm text-slate-700 ${item.paid ? 'line-through opacity-50' : ''}">${item.name}</p>
-                                <p class="text-xs font-mono font-bold text-slate-500">${formatMoney(item.amount)} ${statusLabel}</p>
+                                <p class="font-bold text-sm leading-tight text-slate-700 ${item.paid?'line-through opacity-50':''}">${item.name}</p>
+                                <p class="text-xs font-mono font-bold text-slate-500">${formatMoney(item.amount)}</p>
                             </div>
                         </div>
-                        ${(!isHouse) ? `<button onclick="deleteItem('${item.id}')" class="text-slate-300 hover:text-red-500 text-xs"><i class="fas fa-trash"></i></button>` : ''}
+                        ${deleteBtn}
                     `;
-                    personalList.appendChild(div);
+                    personalContainer.appendChild(div);
                 }
             });
-
             document.getElementById('totalPersonal').textContent = formatMoney(sumPersonal);
-            if (hasRequests) requestsPanel.classList.remove('hidden'); else requestsPanel.classList.add('hidden');
         }
 
-        // --- ACCIONES ---
+        // --- SAVE ---
         window.saveExpense = async () => {
             const name = document.getElementById('inputName').value;
             const amount = parseInt(document.getElementById('inputAmount').value);
             const mode = document.getElementById('currentMode').value;
+            const category = document.getElementById('currentCategory').value;
+            const installments = category === 'credit' ? parseInt(document.getElementById('inputInstallments').value) : 1;
 
             if(!name || isNaN(amount)) return showToast("Falta info");
 
             const batch = writeBatch(db);
-            const date = Date.now();
+            const now = Date.now();
+            const groupId = category === 'credit' ? 'GRP_'+now : null;
 
-            if (mode === 'house') {
-                if (!HOUSE_ADMINS.includes(currentUser.email)) return alert("Solo Admins");
-                
-                const parentRef = doc(collection(db, "gastos"));
-                batch.set(parentRef, { name, amount, type: 'house', isParent: true, userId: 'HOUSE', month: selectedMonth, date });
+            const getMonth = (base, i) => {
+                let [y, m] = base.split('-').map(Number); m += i;
+                while (m > 12) { m -= 12; y++; }
+                return `${y}-${String(m).padStart(2, '0')}`;
+            };
 
-                HOUSE_SPLIT.forEach(userCfg => {
-                    const childRef = doc(collection(db, "gastos"));
-                    batch.set(childRef, {
-                        name, amount: Math.ceil(amount * userCfg.percent), type: 'house', isParent: false, parentId: parentRef.id,
-                        userId: userCfg.email, month: selectedMonth, paid: false, date, approvalStatus: 'approved'
+            for(let i=0; i<installments; i++) {
+                const m = getMonth(selectedMonth, i);
+                const finalName = installments>1 ? `${name} (${i+1}/${installments})` : name;
+                const monthlyAmount = Math.ceil(amount / installments);
+
+                if (mode === 'house') {
+                    if (!SPLIT_USERS.includes(currentUser.email)) return alert("Solo Admins");
+                    const pRef = getNewDoc("gastos");
+                    batch.set(pRef, { name: finalName, amount: monthlyAmount, type: 'house', isParent: true, userId: 'HOUSE', month: m, date: now, category });
+                    const half = Math.ceil(monthlyAmount / 2);
+                    SPLIT_USERS.forEach(e => {
+                        const cRef = getNewDoc("gastos");
+                        batch.set(cRef, { name: finalName, amount: half, type: 'house', parentId: pRef.id, userId: e, month: m, paid: false, date: now, approvalStatus: 'approved' });
                     });
-                });
-                await learnPrice(name, amount);
-            } 
-            else if (mode === 'personal') {
-                await addDoc(collection(db, "gastos"), { name, amount, type: 'personal', userId: currentUser.email, month: selectedMonth, paid: false, date, approvalStatus: 'approved' });
-            }
-            else if (mode === 'custom') {
-                const participants = [currentUser.email, ...selectedParticipants];
-                const partAmount = Math.ceil(amount / participants.length);
-                participants.forEach(email => {
-                    const isMe = email === currentUser.email;
-                    const ref = doc(collection(db, "gastos"));
-                    batch.set(ref, {
-                        name: `${name} (Grupo)`, amount: partAmount, type: isMe ? 'personal' : 'custom_out', userId: email,
-                        month: selectedMonth, paid: false, date, requesterName: currentUser.name, approvalStatus: isMe ? 'approved' : 'pending'
+                    if(i===0) await learnPrice(name, monthlyAmount);
+                }
+                else if (mode === 'personal') {
+                    const ref = getNewDoc("gastos");
+                    batch.set(ref, { name: finalName, amount: monthlyAmount, type: 'personal', userId: currentUser.email, month: m, paid: false, date: now, approvalStatus: 'approved', category, groupId });
+                }
+                else if (mode === 'custom' && i===0) {
+                    const ppl = [currentUser.email, ...selectedParticipants];
+                    const part = Math.ceil(amount / ppl.length);
+                    ppl.forEach(e => {
+                        const ref = getNewDoc("gastos");
+                        const isMe = e === currentUser.email;
+                        batch.set(ref, { name: `${name} (G)`, amount: part, type: isMe?'personal':'custom_out', userId: e, month: m, paid: false, date: now, requesterName: currentUser.name, requesterEmail: currentUser.email, approvalStatus: isMe?'approved':'pending', category, groupId });
                     });
-                });
+                }
             }
-
             await batch.commit();
-            document.getElementById('inputName').value = ''; document.getElementById('inputAmount').value = ''; selectedParticipants = []; renderParticipants();
-            showToast("Guardado");
+            document.getElementById('inputName').value = ''; document.getElementById('inputAmount').value = '';
+            showToast("Guardado Correctamente");
         };
 
-        window.approveItem = async (id) => { await updateDoc(doc(db, "gastos", id), { approvalStatus: 'approved' }); showToast("Aprobado"); };
-        window.togglePaid = async (id, s) => { await updateDoc(doc(db, "gastos", id), { paid: !s }); };
-        window.deleteItem = async (id) => { if(confirm("¿Eliminar?")) await deleteDoc(doc(db, "gastos", id)); };
-        window.deleteGlobal = async (pid) => { if(confirm("¿Borrar todo?")) { const b = writeBatch(db); b.delete(doc(db, "gastos", pid)); allData.filter(d=>d.parentId===pid).forEach(c=>b.delete(doc(db,"gastos",c.id))); await b.commit(); }};
-
-        async function loadPriceMemory() { try { const s = await getDoc(doc(db, "config", "precios_aprendidos")); if(s.exists()) priceMemory = s.data(); else BASE_SERVICES.forEach(s=>priceMemory[s.name]=s.amount); renderSmartButtons(); } catch(e){} }
-        async function learnPrice(name, amount) { priceMemory[name]=amount; try{await setDoc(doc(db,"config","precios_aprendidos"),priceMemory);renderSmartButtons();}catch(e){} }
+        // --- HELPERS & FIXES ---
+        window.togglePaid = async (id, s) => { await updateDoc(getDocument("gastos", id), { paid: !s }); };
+        window.approveItem = async (id) => { await updateDoc(getDocument("gastos", id), { approvalStatus: 'approved' }); showToast("Aprobado"); };
         
-        function renderSmartButtons() {
-            const c = document.getElementById('smartButtons'); c.innerHTML='';
-            BASE_SERVICES.forEach(s=>{
-                const amt = priceMemory[s.name]||s.amount;
-                const btn = document.createElement('button');
-                btn.className = "flex-shrink-0 bg-white border border-slate-200 text-slate-600 px-3 py-2 rounded-xl text-xs font-bold shadow-sm hover:border-indigo-300 hover:text-indigo-600 transition active:scale-95 flex flex-col items-center min-w-[70px]";
-                btn.onclick = () => prefill(s.name, amt);
-                btn.innerHTML = `<i class="fas ${s.icon} text-lg mb-1 opacity-50"></i><span>${s.name}</span><span class="text-[9px] font-mono text-slate-400 mt-0.5">$${Math.round(amt/1000)}k</span>`;
-                c.appendChild(btn);
-            });
+        // BORRADO INTELIGENTE (FIX)
+        window.deleteItem = async (id, gid, type, parentId) => {
+            if (type === 'house' && parentId && parentId !== 'undefined') {
+                 if(confirm("¿Borrar este gasto compartido para TODOS?")) await window.deleteGlobal(parentId);
+                 return;
+            }
+            // Borrado de gasto legacy (sin parentId) que sea 'house'
+            if (type === 'house' && (!parentId || parentId === 'undefined')) {
+                if(confirm("¿Borrar gasto antiguo?")) await deleteDoc(getDocument("gastos", id));
+                return;
+            }
+            if(gid && gid!=='null' && gid!==undefined) { 
+                if(confirm("¿Borrar crédito completo?")){ const q=query(getCollection("gastos"),where("groupId","==",gid)); const s=await getDocs(q); const b=writeBatch(db); s.forEach(d=>b.delete(d.ref)); await b.commit(); showToast("Eliminado"); } 
+            }
+            else if(confirm("¿Borrar?")) await deleteDoc(getDocument("gastos", id)); 
+        };
+        
+        window.deleteGlobal = async (pid) => { 
+            if(confirm("¿Borrar todo?")) { 
+                const b=writeBatch(db); b.delete(getDocument("gastos", pid)); allData.filter(d=>d.parentId===pid).forEach(c=>b.delete(getDocument("gastos", c.id))); await b.commit(); 
+            }
+        };
+
+        async function checkRecurringExpenses() {
+            if(currentUser.role !== 'admin' && currentUser.role !== 'partner') return;
+            const q = query(getCollection("gastos"), where("month", "==", selectedMonth), where("type", "==", "house"));
+            const snapshot = await getDocs(q);
+            if (snapshot.empty) {
+                console.log("Generando recurrentes...");
+                const batch = writeBatch(db); const date = Date.now();
+                BASE_SERVICES.forEach(service => {
+                    const currentPrice = priceMemory[service.name] || service.amount;
+                    const pRef = getNewDoc("gastos");
+                    batch.set(pRef, { name: service.name, amount: currentPrice, type: 'house', isParent: true, userId: 'HOUSE', month: selectedMonth, date, category: 'fixed' });
+                    const half = Math.ceil(currentPrice / 2);
+                    SPLIT_USERS.forEach(email => {
+                        const cRef = getNewDoc("gastos");
+                        batch.set(cRef, { name: service.name, amount: half, type: 'house', parentId: pRef.id, userId: email, month: selectedMonth, paid: false, date, approvalStatus: 'approved', category: 'fixed' });
+                    });
+                });
+                await batch.commit();
+                showToast("Gastos generados");
+            }
         }
-        window.prefill = (n,a) => { document.getElementById('inputName').value=n; document.getElementById('inputAmount').value=a; window.setMode('house'); };
-        
-        window.exportTextReport = () => {
-            if(allData.length===0) return showToast("Nada");
-            let t = `REPORTE ${selectedMonth}\n================\n`;
-            allData.forEach(e => { if((e.isParent && e.type==='house')||(e.type!=='house'&&e.userId===currentUser.email)) t+=`${e.paid?'[OK]':'[  ]'} ${e.name} $${e.amount}\n`; });
-            const b = new Blob([t], {type:'text/plain'});
-            const l = document.createElement("a"); l.href=URL.createObjectURL(b); l.download=`Reporte.txt`; l.click();
-        };
 
+        window.setCategory = (c) => { document.getElementById('currentCategory').value = c; ['btnCatFixed','btnCatOccasional','btnCatCredit'].forEach(b=>document.getElementById(b).className="py-2 rounded-xl text-xs font-bold bg-white text-slate-500 border border-slate-200 transition"); document.getElementById('smartButtonsContainer').classList.add('hidden'); document.getElementById('installmentsPanel').classList.add('hidden'); const a="py-2 rounded-xl text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 transition"; if(c==='fixed'){document.getElementById('btnCatFixed').className=a; document.getElementById('smartButtonsContainer').classList.remove('hidden');} else if(c==='occasional') document.getElementById('btnCatOccasional').className=a; else {document.getElementById('btnCatCredit').className=a; document.getElementById('installmentsPanel').classList.remove('hidden');} };
+        window.setMode = (m) => { document.getElementById('currentMode').value = m; ['btnModePersonal','btnModeHouse','btnModeCustom'].forEach(b=>document.getElementById(b).className="flex-1 py-3 rounded-xl border-2 text-xs font-bold transition flex flex-col items-center justify-center gap-1 border-slate-100 text-slate-400"); document.getElementById('customGroupSelector').classList.add('hidden'); const a="flex-1 py-3 rounded-xl border-2 text-xs font-bold transition flex flex-col items-center justify-center gap-1 border-indigo-500 bg-indigo-50 text-indigo-700"; if(m==='personal') document.getElementById('btnModePersonal').className=a.replace('indigo','emerald'); if(m==='house') document.getElementById('btnModeHouse').className=a; if(m==='custom') {document.getElementById('btnModeCustom').className=a.replace('indigo','purple'); document.getElementById('customGroupSelector').classList.remove('hidden');} };
+        window.filterHouse = (f) => { houseFilter = f; document.getElementById('filterAll').className = `filter-btn text-[9px] font-bold px-2 py-1 rounded ${f==='all'?'active':''} bg-slate-200`; document.getElementById('filterPending').className = `filter-btn text-[9px] font-bold px-2 py-1 rounded ${f==='pending'?'active':''} bg-slate-200`; renderLists(); };
+        window.changeMonth = () => { selectedMonth = document.getElementById('monthSelector').value; loadSalary(); listenData(); checkRecurringExpenses(); };
+        
+        async function loadPriceMemory() { try { const s=await getDoc(getDocument("config", "precios_aprendidos")); if(s.exists()) priceMemory=s.data(); else BASE_SERVICES.forEach(s=>priceMemory[s.name]=s.amount); renderSmartButtons(); } catch(e){} }
+        async function learnPrice(n,a) { priceMemory[n]=a; try{await setDoc(getDocument("config", "precios_aprendidos"),priceMemory);renderSmartButtons();}catch(e){} }
+        async function loadBudgets() { try { const s=await getDoc(getDocument("config", "presupuestos")); if(s.exists()) budgets=s.data(); } catch(e){} }
+        window.addBudget = async () => { if(currentUser.role === 'user') return; const c=prompt("Categoría:"); if(!c) return; const l=prompt("Límite:"); if(!l) return; budgets[c]=parseInt(l); await setDoc(getDocument("config", "presupuestos"), budgets); renderBudgets(); };
+        function renderSmartButtons() { const c = document.getElementById('smartButtons'); c.innerHTML=''; BASE_SERVICES.forEach(s=>{ const amt = priceMemory[s.name]||s.amount; const btn = document.createElement('button'); btn.className = "flex-shrink-0 bg-white border border-slate-200 text-slate-600 px-3 py-2 rounded-xl text-xs font-bold shadow-sm hover:border-indigo-300 hover:text-indigo-600 transition active:scale-95 flex flex-col items-center min-w-[70px]"; btn.onclick = () => prefill(s.name, amt); btn.innerHTML = `<i class="fas ${s.icon} text-lg mb-1 opacity-50"></i><span>${s.name}</span><span class="text-[9px] font-mono text-slate-400 mt-0.5">$${Math.round(amt/1000)}k</span>`; c.appendChild(btn); }); }
+        window.prefill = (n,a) => { document.getElementById('inputName').value=n; document.getElementById('inputAmount').value=a; window.setMode('house'); window.setCategory('fixed'); };
+        async function loadSalary() { try { const s = await getDoc(getDocument("salaries", `salary_${currentUser.email}_${selectedMonth}`)); salaryData = s.exists() ? s.data().amount : 0; document.getElementById('salaryInput').value = salaryData > 0 ? salaryData : ''; updateSalaryUI(); } catch(e) {} }
+        window.updateSalary = async () => { const a = parseInt(document.getElementById('salaryInput').value) || 0; salaryData = a; await setDoc(getDocument("salaries", `salary_${currentUser.email}_${selectedMonth}`), { amount: a }); updateSalaryUI(); };
+        function updateSalaryUI() { const paid = allData.filter(e => e.userId === currentUser.email && e.paid && e.approvalStatus !== 'pending'); const spent = paid.reduce((s, e) => s + e.amount, 0); const pct = salaryData > 0 ? (spent / salaryData) * 100 : 0; document.getElementById('salaryRemaining').textContent = formatMoney(salaryData - spent); document.getElementById('salaryBar').style.width = `${Math.min(pct, 100)}%`; }
+        function renderBudgets() { const div = document.getElementById('budgetsList'); div.innerHTML=''; const spending = {}; allData.forEach(i => { if((i.isParent||i.userId===currentUser.email) && i.category) spending[i.category] = (spending[i.category]||0)+i.amount; }); for(const [c,l] of Object.entries(budgets)) { const cur = spending[c]||0; const pct = Math.min((cur/l)*100,100); const col = pct>90?'bg-red-500':(pct>70?'bg-amber-500':'bg-emerald-500'); div.innerHTML += `<div class="mb-2"><div class="flex justify-between text-[10px] text-slate-500"><span>${c}</span><span>${Math.round(pct)}%</span></div><div class="w-full bg-slate-100 h-1.5 rounded-full"><div class="h-full ${col}" style="width:${pct}%"></div></div></div>`; } }
+        window.exportTextReport = () => { if(allData.length===0) return showToast("Nada"); let t = `REPORTE ${selectedMonth}\n================\n`; allData.forEach(e => { if((e.isParent && e.type==='house')||(e.type!=='house'&&e.userId===currentUser.email)) t+=`${e.paid?'[OK]':'[  ]'} ${e.name} $${e.amount}\n`; }); const b = new Blob([t], {type:'text/plain'}); const l = document.createElement("a"); l.href=URL.createObjectURL(b); l.download=`Reporte.txt`; l.click(); };
         function formatMoney(v) { return new Intl.NumberFormat('es-CL', {style:'currency', currency:'CLP', maximumFractionDigits:0}).format(v); }
         function showToast(m) { const t=document.getElementById('toast'); t.textContent=m; t.classList.remove('-translate-y-4','opacity-0'); setTimeout(()=>t.classList.add('-translate-y-4','opacity-0'),3000); }
+        function showError(m) { document.getElementById('login-error').textContent=m; document.getElementById('login-error').classList.remove('hidden'); }
+        function renderParticipants() { const c=document.getElementById('participantsContainer'); c.innerHTML=''; USERS.forEach(u=>{ if(u.email===currentUser.email)return; const b=document.createElement('button'); b.className="btn-select px-3 py-2 rounded-lg border bg-white text-xs font-bold text-slate-500"; b.textContent=u.name; b.onclick=()=>{ b.classList.toggle('selected'); if(b.classList.contains('selected')) selectedParticipants.push(u.email); else selectedParticipants=selectedParticipants.filter(e=>e!==u.email); }; c.appendChild(b); }); }
     </script>
 </body>
 </html>
