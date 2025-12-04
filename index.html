@@ -2,203 +2,224 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Finanzas Suite</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: { extend: { colors: { slate: { 850: '#1e293b', 900: '#0f172a' } } } }
+        }
+    </script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
-        body { font-family: 'Outfit', sans-serif; background-color: #f8fafc; }
-        .fade-in { animation: fadeIn 0.3s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        .fade-in { animation: fadeIn 0.2s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         .hidden-view { display: none !important; }
         .hide-scroll::-webkit-scrollbar { display: none; }
+
+        /* Semáforos Hogar */
+        .sync-red { border-left: 5px solid #ef4444; background-color: #fff; }
+        .sync-yellow { border-left: 5px solid #f59e0b; background-color: #fffbeb; }
+        .sync-green { border-left: 5px solid #22c55e; background-color: #f0fdf4; opacity: 0.9; }
         
-        /* Semáforos */
-        .status-red { border-left: 5px solid #ef4444; background: #fff; }
-        .status-yellow { border-left: 5px solid #f59e0b; background: #fffbeb; }
-        .status-green { border-left: 5px solid #22c55e; background: #f0fdf4; opacity: 0.75; }
+        .dark .sync-red { background-color: #1e293b; border-left-color: #ef4444; }
+        .dark .sync-yellow { background-color: #1e293b; border-left-color: #f59e0b; }
+        .dark .sync-green { background-color: #1e293b; border-left-color: #22c55e; }
 
-        /* Categorías Visuales */
-        .cat-fixed { border-top: 3px solid #6366f1; } 
-        .cat-occasional { border-top: 3px solid #10b981; } 
-        .cat-credit { border-top: 3px solid #f59e0b; background-color: #fff7ed; }
+        /* Badges */
+        .badge-red { background: #fee2e2; color: #991b1b; }
+        .badge-yellow { background: #fef3c7; color: #92400e; }
+        .badge-green { background: #dcfce7; color: #166534; }
+        .dark .badge-red { background: #7f1d1d; color: #fecaca; }
+        .dark .badge-yellow { background: #78350f; color: #fde68a; }
+        .dark .badge-green { background: #14532d; color: #bbf7d0; }
 
-        /* Botones Activos */
-        .filter-btn.active { background-color: #1e293b; color: white; }
-        .btn-select.selected { background-color: #4f46e5 !important; color: white !important; border-color: #4338ca !important; }
-
-        /* Check Personal */
-        .card-personal { transition: all 0.2s; border: 1px solid #e2e8f0; }
-        .card-personal-done { background: #ecfdf5; border-color: #10b981; color: #065f46; text-decoration: line-through; opacity: 0.6; }
+        /* Estado Personal */
+        .card-personal-done { text-decoration: line-through; opacity: 0.6; background-color: #f0fdf4; border-color: #22c55e; }
+        .dark .card-personal-done { background-color: #064e3b; border-color: #059669; color: #a7f3d0; }
+        
+        /* Notificación */
+        .notification-badge { position: absolute; top: 0; right: 0; width: 10px; height: 10px; background: #ef4444; border-radius: 50%; border: 2px solid white; }
+        .modal-bg { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(4px); }
+        
+        /* Tabs */
+        .nav-item { color: #94a3b8; transition: all 0.3s; border-top: 3px solid transparent; }
+        .nav-item.active { color: #4f46e5; border-top-color: #4f46e5; }
+        .dark .nav-item.active { color: #818cf8; border-top-color: #818cf8; }
     </style>
 </head>
-<body class="bg-slate-100 min-h-screen text-slate-800 padding-top-safe">
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 h-screen flex flex-col transition-colors duration-300">
 
-    <!-- DEV TOOLBAR (Oculta, solo para Admin logueado si se requiere en futuro) -->
-    <div id="devToolbar" class="hidden fixed top-0 left-0 right-0 bg-slate-900 z-50 p-2 shadow-xl flex justify-between items-center overflow-x-auto">
-        <span class="text-[10px] font-bold text-slate-400 uppercase mr-2 shrink-0">Admin Tools:</span>
-        <div class="flex gap-2">
-            <button onclick="switchUser('vicente8sanchez@gmail.com')" id="devBtnVicente" class="px-2 py-1 rounded text-[10px] font-bold bg-slate-700 text-white border border-slate-600 hover:bg-indigo-600 transition">Vicente</button>
-            <button onclick="switchUser('carlosinvictus50@gmail.com')" id="devBtnCarlos" class="px-2 py-1 rounded text-[10px] font-bold bg-slate-700 text-white border border-slate-600 hover:bg-purple-600 transition">Carlos</button>
-        </div>
-    </div>
-
-    <!-- LOGIN -->
-    <div id="view-login" class="flex flex-col items-center justify-center min-h-screen p-6 fade-in">
-        <div class="bg-white p-8 rounded-3xl shadow-xl w-full max-w-sm text-center border border-slate-100">
-            <div class="w-16 h-16 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i class="fas fa-wallet text-3xl text-indigo-600"></i>
+    <!-- 1. LOGIN -->
+    <div id="view-login" class="flex-grow flex flex-col items-center justify-center p-6 fade-in">
+        <div class="bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-xl w-full max-w-sm text-center border border-slate-100 dark:border-slate-700">
+            <div class="w-16 h-16 bg-indigo-50 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
+                <i class="fas fa-wallet"></i>
             </div>
-            <h1 class="text-2xl font-extrabold text-slate-800 mb-1">Finanzas Suite</h1>
-            <p class="text-slate-400 text-xs mb-6">Control Total v45</p>
+            <h1 class="text-2xl font-extrabold text-slate-900 dark:text-white mb-1">Finanzas Suite</h1>
+            <p class="text-slate-400 text-xs mb-8">Gestión Inteligente v50</p>
             
-            <div class="grid grid-cols-1 gap-3">
-                <button onclick="loginWithGoogle()" class="w-full bg-slate-900 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-black flex items-center justify-center gap-2 transition active:scale-95 text-sm">
-                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5"> Entrar con Google
-                </button>
+            <button onclick="loginWithGoogle()" class="w-full bg-slate-900 dark:bg-indigo-600 text-white font-bold py-3.5 rounded-xl shadow-lg hover:bg-black dark:hover:bg-indigo-700 transition active:scale-95 flex items-center justify-center gap-2 mb-4">
+                <i class="fab fa-google"></i> Entrar con Google
+            </button>
+            
+            <!-- Botones de Acceso Rápido (Para cambiar cuentas sin logout de google) -->
+             <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 mt-4">Cambiar Cuenta:</p>
+            <div class="grid grid-cols-2 gap-2 w-full">
+                <button onclick="loginTest('vicente8sanchez@gmail.com')" class="p-2 bg-slate-100 dark:bg-slate-700 text-xs font-bold rounded hover:bg-slate-200 dark:hover:bg-slate-600">Vicente</button>
+                <button onclick="loginTest('carlosinvictus50@gmail.com')" class="p-2 bg-slate-100 dark:bg-slate-700 text-xs font-bold rounded hover:bg-slate-200 dark:hover:bg-slate-600">Carlos</button>
+                <button onclick="loginTest('anabellc.nc@gmail.com')" class="p-2 bg-slate-100 dark:bg-slate-700 text-xs font-bold rounded hover:bg-slate-200 dark:hover:bg-slate-600">Anabel</button>
+                <button onclick="loginTest('juanpapino10@gmail.com')" class="p-2 bg-slate-100 dark:bg-slate-700 text-xs font-bold rounded hover:bg-slate-200 dark:hover:bg-slate-600">JP</button>
             </div>
-            <p id="login-error" class="text-red-500 text-xs mt-3 hidden font-mono bg-red-50 p-2 rounded text-center border border-red-200"></p>
         </div>
     </div>
 
-    <!-- APP PRINCIPAL -->
-    <div id="view-app" class="hidden-view pb-32 pt-10 fade-in">
+    <!-- 2. APP PRINCIPAL -->
+    <div id="view-app" class="hidden-view flex-col h-full overflow-hidden">
         
-        <!-- Navbar -->
-        <nav class="bg-white sticky top-10 z-30 px-5 py-3 shadow-sm border-b border-slate-100 flex justify-between items-center">
+        <!-- Header Fijo -->
+        <header class="bg-white dark:bg-slate-800 px-5 py-3 flex justify-between items-center shadow-sm z-20 shrink-0 border-b border-slate-100 dark:border-slate-700">
             <div class="flex items-center gap-3">
-                <img id="userPhoto" src="" class="w-9 h-9 rounded-full border-2 border-slate-200 bg-slate-100">
-                <div class="leading-tight">
-                    <p class="text-[9px] uppercase font-bold text-slate-400" id="devLabel">Perfil</p>
-                    <p id="userName" class="font-bold text-slate-800 text-sm">Usuario</p>
+                <img id="userPhoto" src="" class="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-600 bg-slate-100">
+                <div>
+                    <p class="text-[10px] uppercase font-bold text-slate-400" id="userRoleLabel">Usuario</p>
+                    <p id="userName" class="font-bold text-slate-800 dark:text-white text-sm leading-none">Nombre</p>
                 </div>
             </div>
-            <div class="flex gap-2 items-center">
-                <button onclick="toggleNotifications()" class="relative w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center transition">
-                    <i class="fas fa-bell text-xs"></i>
-                    <div id="notifBadge" class="hidden notification-badge" style="position:absolute; top:0; right:0; width:8px; height:8px; background:red; border-radius:50%;"></div>
+            <div class="flex items-center gap-2">
+                <button onclick="toggleDarkMode()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-yellow-400 flex items-center justify-center transition">
+                    <i class="fas fa-moon dark:hidden"></i><i class="fas fa-sun hidden dark:block"></i>
                 </button>
-                <div class="bg-slate-100 rounded-lg px-2 py-1">
-                    <input type="month" id="monthSelector" class="bg-transparent text-xs font-bold text-slate-600 outline-none cursor-pointer" onchange="changeMonth()">
+                <button onclick="toggleNotifications()" class="relative w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300 flex items-center justify-center transition">
+                    <i class="fas fa-bell"></i><div id="notifBadge" class="hidden notification-badge"></div>
+                </button>
+                <div class="bg-slate-100 dark:bg-slate-700 rounded-lg px-2 py-1 flex items-center gap-2">
+                    <input type="month" id="monthSelector" class="bg-transparent text-xs font-bold text-slate-600 dark:text-slate-300 outline-none cursor-pointer w-24 dark:invert-0" onchange="changeMonth()">
                 </div>
-                <button onclick="logout()" class="w-8 h-8 rounded-full bg-red-50 text-red-500 hover:bg-red-100 flex items-center justify-center transition"><i class="fas fa-power-off text-xs"></i></button>
             </div>
-        </nav>
+        </header>
 
-        <!-- Notificaciones -->
-        <div id="notificationsPanel" class="hidden bg-slate-800 text-white p-4 fixed top-[110px] left-4 right-4 z-40 shadow-2xl rounded-2xl animate-fade-in-down border border-slate-700">
+        <!-- Notificaciones Overlay -->
+        <div id="notificationsPanel" class="hidden bg-slate-800 text-white p-4 absolute top-16 left-4 right-4 z-30 shadow-2xl rounded-2xl animate-fade-in-down border border-slate-700">
             <h3 class="text-xs font-bold uppercase tracking-widest mb-3 text-orange-400">Solicitudes Pendientes</h3>
-            <div id="requestsList" class="space-y-2"></div>
+            <div id="requestsList" class="space-y-2"><p class="text-xs text-slate-400 italic text-center py-2">Sin novedades</p></div>
         </div>
 
-        <main class="p-4 max-w-6xl mx-auto space-y-5">
+        <!-- Contenido -->
+        <main class="flex-grow overflow-y-auto p-4 pb-24 relative">
+            
+            <!-- TAB HOGAR -->
+            <div id="tab-house" class="fade-in space-y-4">
+                <div class="flex justify-between items-end px-1">
+                    <h2 class="text-lg font-bold text-slate-700 dark:text-white">Hogar</h2>
+                    <span class="text-xs font-bold text-indigo-600 bg-indigo-50 dark:bg-indigo-900/50 dark:text-indigo-300 px-2 py-1 rounded-lg" id="totalHouseLabel">$0</span>
+                </div>
+                <div id="houseList" class="space-y-3"></div>
+            </div>
 
-            <!-- 1. DASHBOARD -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="bg-slate-800 p-5 rounded-3xl shadow-lg relative overflow-hidden text-white">
-                    <div class="flex justify-between items-start mb-3 relative z-10">
+            <!-- TAB PERSONAL -->
+            <div id="tab-personal" class="hidden-view fade-in space-y-4">
+                <div class="bg-slate-800 p-5 rounded-2xl shadow-lg text-white relative overflow-hidden">
+                    <div class="flex justify-between items-start relative z-10">
                         <div>
-                            <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1">Líquido</p>
-                            <div class="flex items-center gap-1">
-                                <span class="text-slate-400 text-lg">$</span>
-                                <input type="number" id="salaryInput" class="bg-transparent text-2xl font-extrabold text-white w-32 outline-none border-b border-slate-600 focus:border-emerald-400 transition" placeholder="0" onchange="updateSalary()">
-                            </div>
+                            <p class="text-slate-400 text-[10px] font-bold uppercase mb-1">Disponible</p>
+                            <p class="text-3xl font-bold tracking-tight text-emerald-400" id="salaryRemaining">$0</p>
                         </div>
                         <div class="text-right">
-                            <p class="text-[10px] text-slate-400 uppercase font-bold">Disponible</p>
-                            <p class="text-2xl font-bold text-emerald-400" id="salaryRemaining">$0</p>
+                            <p class="text-[10px] text-slate-400 uppercase">Líquido</p>
+                            <div class="flex items-center gap-1 justify-end">
+                                <span class="text-xs text-slate-500">$</span>
+                                <input type="number" id="salaryInput" class="bg-transparent text-sm font-bold text-white w-20 text-right outline-none border-b border-slate-600 focus:border-emerald-400" placeholder="0" onchange="updateSalary()">
+                            </div>
                         </div>
                     </div>
-                    <div class="w-full bg-slate-700 h-1.5 rounded-full overflow-hidden mb-1">
-                        <div id="salaryBar" class="h-full bg-emerald-500 transition-all duration-700" style="width: 0%"></div>
+                    <div class="mt-4 w-full bg-slate-700 h-1.5 rounded-full overflow-hidden">
+                        <div id="salaryBar" class="h-full bg-emerald-500 transition-all duration-500" style="width: 0%"></div>
                     </div>
                 </div>
 
-                <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col justify-center">
-                    <div class="flex justify-between items-center mb-2">
-                        <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Presupuestos</h3>
-                        <button onclick="addBudget()" class="text-[10px] text-blue-500 font-bold bg-blue-50 px-2 py-1 rounded hover:bg-blue-100">+ Meta</button>
-                    </div>
-                    <div id="budgetsList" class="space-y-2 overflow-y-auto max-h-24 hide-scroll text-xs"><div class="text-center text-slate-300 italic">Cargando...</div></div>
+                <div class="flex justify-between items-end px-1 mt-2">
+                    <h2 class="text-lg font-bold text-slate-700 dark:text-white">Mi Bolsillo</h2>
+                    <span class="text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-900/50 dark:text-emerald-300 px-2 py-1 rounded-lg" id="totalPersonalLabel">$0</span>
                 </div>
+                <div id="personalList" class="space-y-3 pb-10"></div>
             </div>
 
-            <!-- 2. FORMULARIO -->
-            <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 relative z-10">
-                
-                <!-- Categorías -->
-                <div class="flex gap-2 mb-4 overflow-x-auto hide-scroll">
-                    <button onclick="setCategory('fixed')" id="btnCatFixed" class="flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-bold bg-indigo-600 text-white transition">Fijo</button>
-                    <button onclick="setCategory('occasional')" id="btnCatOccasional" class="flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-bold bg-slate-100 text-slate-500 transition">Ocasional</button>
-                    <button onclick="setCategory('credit')" id="btnCatCredit" class="flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-bold bg-slate-100 text-slate-500 transition">Crédito</button>
+            <!-- TAB METAS -->
+            <div id="tab-charts" class="hidden-view fade-in space-y-4">
+                <h2 class="text-lg font-bold text-slate-700 dark:text-white px-1">Análisis</h2>
+                <div class="card p-5 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl">
+                    <div class="h-48 w-full flex justify-center"><canvas id="expensesChart"></canvas></div>
                 </div>
-                <input type="hidden" id="currentCategory" value="fixed">
-
-                <div id="smartButtonsContainer">
-                    <div id="smartButtons" class="flex gap-2 overflow-x-auto hide-scroll mb-4 pb-1"></div>
-                </div>
-
-                <div class="flex gap-3 mb-3">
-                    <input type="text" id="inputName" placeholder="Concepto" class="w-full p-3 bg-slate-50 rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-indigo-100 transition">
-                    <input type="number" id="inputAmount" placeholder="$ Total" class="w-1/3 p-3 bg-slate-50 rounded-xl font-bold text-center text-sm outline-none focus:ring-2 focus:ring-indigo-100 transition">
-                </div>
-
-                <div id="installmentsPanel" class="hidden mb-3 bg-orange-50 p-2 rounded-xl border border-orange-100 flex items-center justify-between px-3">
-                    <span class="text-xs font-bold text-orange-700">Cuotas:</span>
-                    <select id="inputInstallments" class="bg-white border border-orange-200 text-orange-700 font-bold text-xs rounded-lg px-2 py-1 outline-none">
-                        <option value="2">2</option><option value="3">3</option><option value="6">6</option><option value="12">12</option>
-                        <option value="24">24</option>
-                    </select>
-                </div>
-                
-                <div class="flex gap-2 mb-4">
-                    <button onclick="setMode('personal')" id="btnModePersonal" class="flex-1 py-2.5 rounded-xl border-2 text-[10px] uppercase font-bold transition border-emerald-500 bg-emerald-50 text-emerald-700">Mío</button>
-                    <button onclick="setMode('house')" id="btnModeHouse" class="flex-1 py-2.5 rounded-xl border-2 text-[10px] uppercase font-bold transition border-slate-100 text-slate-400">Hogar</button>
-                    <button onclick="setMode('custom')" id="btnModeCustom" class="flex-1 py-2.5 rounded-xl border-2 text-[10px] uppercase font-bold transition border-slate-100 text-slate-400">Grupo</button>
-                </div>
-
-                <div id="customGroupSelector" class="hidden mb-4 bg-slate-50 p-3 rounded-xl">
-                    <p class="text-[10px] font-bold text-slate-400 uppercase mb-2">Cobrar a:</p>
-                    <div class="flex gap-2 flex-wrap" id="participantsContainer"></div>
-                </div>
-                
-                <button onclick="saveExpense()" class="w-full bg-slate-900 text-white py-3 rounded-xl font-bold hover:bg-black transition shadow-lg active:scale-95 text-sm">
-                    REGISTRAR
-                </button>
-                <input type="hidden" id="currentMode" value="personal">
-            </div>
-
-            <!-- 3. LISTAS -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <!-- HOGAR -->
-                <div class="space-y-3">
-                    <div class="flex justify-between px-2 items-center">
-                        <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Hogar</h3>
-                        <div class="flex gap-1">
-                            <button onclick="filterHouse('all')" class="filter-btn active text-[9px] font-bold px-2 py-1 rounded bg-slate-800 text-white" id="filterAll">Todo</button>
-                            <button onclick="filterHouse('pending')" class="filter-btn text-[9px] font-bold px-2 py-1 rounded bg-slate-200 text-slate-500" id="filterPending">Pendiente</button>
-                        </div>
+                <div class="card p-5 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="text-xs font-bold text-slate-400 uppercase">Presupuestos</h3>
+                        <button onclick="addBudget()" class="text-[10px] bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-2 py-1 rounded font-bold">+ Crear</button>
                     </div>
-                    <div id="houseList" class="space-y-3"></div>
-                </div>
-
-                <!-- PERSONAL -->
-                <div class="space-y-3">
-                    <div class="flex justify-between px-2 items-center">
-                        <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Mi Bolsillo</h3>
-                        <span id="totalPersonal" class="text-xs font-bold text-emerald-600">$0</span>
-                    </div>
-                    <div id="personalList" class="space-y-3"></div>
+                    <div id="budgetsList" class="space-y-3"></div>
                 </div>
             </div>
-
         </main>
+
+        <button onclick="openModal()" class="absolute bottom-20 right-5 w-14 h-14 bg-indigo-600 text-white rounded-full shadow-xl flex items-center justify-center text-2xl hover:scale-105 active:scale-95 transition z-30"><i class="fas fa-plus"></i></button>
+
+        <nav class="bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 flex justify-around items-center h-16 shrink-0 z-20 pb-safe transition-colors">
+            <button onclick="switchTab('house')" id="nav-house" class="nav-item active flex-1 h-full flex flex-col items-center justify-center gap-1"><i class="fas fa-home text-lg"></i><span class="text-[10px] font-bold">Hogar</span></button>
+            <button onclick="switchTab('personal')" id="nav-personal" class="nav-item flex-1 h-full flex flex-col items-center justify-center gap-1"><i class="fas fa-wallet text-lg"></i><span class="text-[10px] font-bold">Bolsillo</span></button>
+            <button onclick="switchTab('charts')" id="nav-charts" class="nav-item flex-1 h-full flex flex-col items-center justify-center gap-1"><i class="fas fa-chart-pie text-lg"></i><span class="text-[10px] font-bold">Metas</span></button>
+        </nav>
     </div>
 
-    <div id="toast" class="fixed top-6 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-6 py-3 rounded-full shadow-2xl text-xs font-bold opacity-0 transition-all pointer-events-none z-50 -translate-y-4"></div>
+    <!-- MODAL AGREGAR -->
+    <div id="addModal" class="hidden fixed inset-0 z-50 flex items-end sm:items-center justify-center modal-bg fade-in">
+        <div class="bg-white dark:bg-slate-800 w-full sm:w-96 rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl transform transition-all">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-slate-800 dark:text-white">Nuevo Gasto</h3>
+                <button onclick="closeModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500 flex items-center justify-center"><i class="fas fa-times"></i></button>
+            </div>
+
+            <div class="flex gap-2 overflow-x-auto hide-scroll mb-4 pb-1" id="smartButtons"></div>
+
+            <div class="grid grid-cols-2 gap-2 mb-4 bg-slate-100 dark:bg-slate-700 p-1 rounded-xl">
+                <button onclick="setFormMode('personal')" id="formBtnPersonal" class="py-2 rounded-lg text-xs font-bold transition bg-white dark:bg-slate-600 text-emerald-600 shadow-sm">👤 Mío</button>
+                <button onclick="setFormMode('house')" id="formBtnHouse" class="py-2 rounded-lg text-xs font-bold transition text-slate-400">🏠 Casa</button>
+            </div>
+            
+            <div class="space-y-3 mb-4">
+                <input type="text" id="inputName" placeholder="¿Qué compraste?" class="w-full p-3 bg-slate-50 dark:bg-slate-700 dark:text-white rounded-xl font-bold text-sm outline-none border border-transparent focus:border-indigo-500 transition">
+                <div class="flex gap-3">
+                    <input type="number" id="inputAmount" placeholder="$ Monto" class="w-2/3 p-3 bg-slate-50 dark:bg-slate-700 dark:text-white rounded-xl font-bold text-sm outline-none border border-transparent focus:border-indigo-500 transition">
+                    <select id="inputCategory" class="w-1/3 p-3 bg-slate-50 dark:bg-slate-700 dark:text-white rounded-xl font-bold text-xs outline-none border border-transparent">
+                        <option value="General">General</option><option value="Super">Super</option><option value="Servicios">Servicios</option><option value="Ocio">Ocio</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between mb-4 px-1">
+                <label class="flex items-center gap-2 text-xs font-bold text-slate-500 dark:text-slate-400 cursor-pointer">
+                    <input type="checkbox" id="isCredit" class="accent-indigo-600" onchange="toggleCreditInput()"> Es Crédito/Cuotas
+                </label>
+                <select id="inputCuotas" class="hidden bg-slate-50 dark:bg-slate-700 border border-transparent text-xs rounded-lg px-2 py-1 font-bold text-orange-600 outline-none">
+                    <option value="2">2 Cuotas</option><option value="3">3 Cuotas</option><option value="6">6 Cuotas</option><option value="12">12 Cuotas</option>
+                </select>
+            </div>
+
+            <button onclick="saveExpense()" class="w-full bg-slate-900 dark:bg-indigo-600 text-white py-3.5 rounded-xl font-bold shadow-lg hover:bg-black dark:hover:bg-indigo-700 active:scale-95 transition">Guardar</button>
+            
+            <div id="groupSelector" class="hidden mt-3 pt-3 border-t border-slate-100 dark:border-slate-700">
+                <p class="text-[10px] font-bold text-slate-400 uppercase mb-2">Cobrar a (Opcional):</p>
+                <div class="flex gap-2 flex-wrap" id="participantsContainer"></div>
+            </div>
+            <input type="hidden" id="currentFormMode" value="personal">
+        </div>
+    </div>
+
+    <div id="toast" class="fixed top-4 left-1/2 -translate-x-1/2 bg-slate-900 dark:bg-slate-700 text-white px-5 py-2.5 rounded-full shadow-2xl text-xs font-bold opacity-0 transition-all pointer-events-none z-50 -translate-y-4">Msg</div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -216,7 +237,7 @@
 
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
-        // EMAILS REALES
+        // CORREOS REALES (HARCODED)
         const FAMILY_CONFIG = {
             'vicente8sanchez@gmail.com': { name: 'Vicente', role: 'admin' },
             'carlosinvictus50@gmail.com': { name: 'Carlos',  role: 'partner' },
@@ -224,16 +245,17 @@
             'juanpapino10@gmail.com': { name: 'JP',      role: 'user' }
         };
 
-        const SPLIT_USERS = ['vicente8sanchez@gmail.com', 'carlosinvictus50@gmail.com']; 
         const USERS = Object.entries(FAMILY_CONFIG).map(([email, data]) => ({ email, ...data }));
+        const HOUSE_ADMINS = ['vicente8sanchez@gmail.com', 'carlosinvictus50@gmail.com'];
+        const SPLIT_USERS = HOUSE_ADMINS;
 
         const BASE_SERVICES = [
-            { name: 'Arriendo', amount: 350000, icon: 'fa-home', cat: 'fixed' },
-            { name: 'Luz', amount: 45000, icon: 'fa-lightbulb', cat: 'fixed' },
-            { name: 'Agua', amount: 25000, icon: 'fa-faucet', cat: 'fixed' },
-            { name: 'Gas', amount: 60000, icon: 'fa-fire', cat: 'fixed' },
-            { name: 'Internet', amount: 30000, icon: 'fa-wifi', cat: 'fixed' },
-            { name: 'GC', amount: 90000, icon: 'fa-building', cat: 'fixed' }
+            { name: 'Arriendo', amount: 350000, icon: 'fa-home', cat: 'Hogar' },
+            { name: 'Luz', amount: 45000, icon: 'fa-lightbulb', cat: 'Servicios' },
+            { name: 'Agua', amount: 25000, icon: 'fa-faucet', cat: 'Servicios' },
+            { name: 'Gas', amount: 60000, icon: 'fa-fire', cat: 'Servicios' },
+            { name: 'Internet', amount: 30000, icon: 'fa-wifi', cat: 'Servicios' },
+            { name: 'GC', amount: 90000, icon: 'fa-building', cat: 'Hogar' }
         ];
 
         const app = initializeApp(firebaseConfig);
@@ -242,297 +264,217 @@
         const provider = new GoogleAuthProvider();
 
         let currentUser = null;
-        let testEmailTarget = null;
         const now = new Date();
         const offset = now.getTimezoneOffset() * 60000;
         const localDate = new Date(now.getTime() - offset);
-        let selectedMonth = localDate.toISOString().slice(0, 7); 
-        
-        let allData = [];
-        let priceMemory = {};
-        let budgets = {};
-        let salaryData = 0;
-        let selectedParticipants = [];
-        let houseFilter = 'all';
+        let selectedMonth = localDate.toISOString().slice(0, 7);
+        let allData = [], priceMemory = {}, budgets = {}, salaryData = 0, selectedParticipants = [], myChart = null;
 
-        // HELPER DB
+        // Helper DB
         function getCollection(name) { return collection(db, 'artifacts', appId, 'public', 'data', name); }
-        function getDocument(colName, docId) { return doc(db, 'artifacts', appId, 'public', 'data', colName, docId); }
-        function getNewDoc(colName) { return doc(getCollection(colName)); }
+        function getDocument(col, id) { return doc(db, 'artifacts', appId, 'public', 'data', col, id); }
+        function getNewDoc(col) { return doc(getCollection(col)); }
+
+        // UI
+        window.toggleDarkMode = () => { document.documentElement.classList.toggle('dark'); localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light'); };
+        if (localStorage.getItem('theme') === 'dark') document.documentElement.classList.add('dark');
+
+        window.switchTab = (tab) => {
+            ['house','personal','charts'].forEach(t => { document.getElementById(`tab-${t}`).classList.add('hidden-view'); document.getElementById(`nav-${t}`).classList.remove('active'); });
+            document.getElementById(`tab-${tab}`).classList.remove('hidden-view'); document.getElementById(`nav-${tab}`).classList.add('active');
+        };
+
+        window.openModal = () => { document.getElementById('addModal').classList.remove('hidden'); renderSmartButtons(); };
+        window.closeModal = () => document.getElementById('addModal').classList.add('hidden');
+
+        window.setFormMode = (mode) => {
+            document.getElementById('currentFormMode').value = mode;
+            const p = document.getElementById('formBtnPersonal'), h = document.getElementById('formBtnHouse'), g = document.getElementById('groupSelector');
+            p.className="py-2 rounded-lg text-xs font-bold transition text-slate-400 dark:text-slate-500"; h.className=p.className; g.classList.add('hidden');
+            if (mode === 'personal') { p.className="py-2 rounded-lg text-xs font-bold transition bg-white dark:bg-slate-600 text-emerald-600 dark:text-emerald-400 shadow-sm border border-emerald-100 dark:border-emerald-800"; g.classList.remove('hidden'); }
+            else { h.className="py-2 rounded-lg text-xs font-bold transition bg-white dark:bg-slate-600 text-indigo-600 dark:text-indigo-400 shadow-sm border border-indigo-100 dark:border-indigo-800"; }
+        };
+        window.toggleCreditInput = () => document.getElementById('inputCuotas').classList.toggle('hidden', !document.getElementById('isCredit').checked);
 
         // AUTH
-        window.loginWithGoogle = async () => { try { await signInWithPopup(auth, provider); } catch(e){ showError(e.message); } };
-        window.switchUser = (email) => { testEmailTarget = email; signInAnonymously(auth).catch(e=>showError(e.message)); };
-        window.logout = () => { testEmailTarget = null; signOut(auth); };
+        window.loginWithGoogle = async () => { try { await signInWithPopup(auth, provider); } catch(e){ alert(e.message); } };
+        window.loginTest = async (email) => { 
+            // Simular login (Solo para desarrollo/test, en prod usar Google)
+            try { await signInAnonymously(auth); currentUser = { ...FAMILY_CONFIG[email], email, photoURL:`https://ui-avatars.com/api/?name=${FAMILY_CONFIG[email].name}&background=random` }; initUI(); } catch(e){}
+        };
+        window.logout = () => signOut(auth);
 
         onAuthStateChanged(auth, (user) => {
-            if (user) {
-                let email = user.email;
-                let isTest = false;
-                if (user.isAnonymous && testEmailTarget) { email = testEmailTarget; isTest = true; }
-                email = email ? email.toLowerCase() : '';
-                if (FAMILY_CONFIG[email]) {
-                    currentUser = { ...user, email, ...FAMILY_CONFIG[email], isTest };
-                    initUI();
-                } else {
-                    if(!isTest) { alert("Correo no autorizado"); signOut(auth); }
-                }
-            } else {
-                document.getElementById('view-app').classList.add('hidden-view');
-                document.getElementById('view-login').classList.remove('hidden-view');
-                document.getElementById('devToolbar').classList.add('hidden');
+            if (user && !currentUser) { // Si es Google Real
+                let email = user.email ? user.email.toLowerCase() : '';
+                if (FAMILY_CONFIG[email]) { currentUser = { ...user, email, ...FAMILY_CONFIG[email] }; initUI(); }
+                else if(!user.isAnonymous) { alert("No autorizado"); signOut(auth); }
+            } else if (!user) {
+                document.getElementById('view-app').classList.add('hidden-view'); document.getElementById('view-login').classList.remove('hidden-view');
             }
         });
 
         async function initUI() {
             document.getElementById('view-login').classList.add('hidden-view');
             document.getElementById('view-app').classList.remove('hidden-view');
-            document.getElementById('userPhoto').src = currentUser.photoURL || `https://ui-avatars.com/api/?name=${currentUser.name}&background=random`;
+            document.getElementById('userPhoto').src = currentUser.photoURL;
             document.getElementById('userName').textContent = currentUser.name;
+            document.getElementById('userRoleLabel').textContent = currentUser.role;
             document.getElementById('monthSelector').value = selectedMonth;
-            
-            if(currentUser.isTest || currentUser.role === 'admin') document.getElementById('devToolbar').classList.remove('hidden');
-            
-            if (currentUser.role === 'user') {
-                document.getElementById('btnModeHouse').classList.add('hidden');
-                window.setMode('personal');
-            } else {
-                document.getElementById('btnModeHouse').classList.remove('hidden');
-            }
 
+            if (currentUser.role === 'user') { document.getElementById('formBtnHouse').classList.add('hidden'); window.setFormMode('personal'); }
             renderParticipants();
             await Promise.all([loadSalary(), loadBudgets(), loadPriceMemory()]);
-            listenData();
-            listenNotifications();
-            await checkRecurringExpenses();
+            listenData(); checkRecurringExpenses();
         }
 
         // DATA
         function listenData() {
             const q = query(getCollection("gastos"), where("month", "==", selectedMonth));
             onSnapshot(q, (snapshot) => {
-                allData = [];
-                snapshot.forEach(doc => allData.push({ id: doc.id, ...doc.data() }));
-                if(allData.length>0) console.log(`Loaded ${allData.length}`);
-                renderLists();
-                updateSalaryUI();
-                renderBudgets();
-            }, (error) => showError("Error DB: " + error.message));
+                allData = []; snapshot.forEach(doc => allData.push({ id: doc.id, ...doc.data() }));
+                renderHouseTab(); renderPersonalTab(); updateSalaryUI(); renderBudgets(); updateChart(); listenNotifications();
+            });
         }
 
         function listenNotifications() {
             const q = query(getCollection("gastos"), where("userId", "==", currentUser.email), where("approvalStatus", "==", "pending"));
-            onSnapshot(q, (snap) => {
-                const reqs = []; snap.forEach(d => reqs.push({id:d.id, ...d.data()}));
-                renderNotifications(reqs);
-            });
+            onSnapshot(q, (snap) => { const reqs=[]; snap.forEach(d=>reqs.push({id:d.id,...d.data()})); renderNotifications(reqs); });
         }
 
-        function renderLists() {
-            const houseContainer = document.getElementById('houseList');
-            const personalContainer = document.getElementById('personalList');
-            houseContainer.innerHTML = ''; personalContainer.innerHTML = '';
-            let sumPersonal = 0;
+        function renderHouseTab() {
+            const list = document.getElementById('houseList'); list.innerHTML = '';
+            let totalH = 0;
+            const houseExpenses = allData.filter(e => e.type === 'house' && e.isParent);
+            houseExpenses.sort((a,b) => b.amount - a.amount);
+            
+            if(houseExpenses.length===0) list.innerHTML='<div class="text-center py-8 text-slate-300 text-xs italic">Al día</div>';
 
-            const myExpenses = allData.filter(e => e.type === 'house' || e.userId === currentUser.email);
-            myExpenses.sort((a,b) => b.amount - a.amount);
+            houseExpenses.forEach(item => {
+                totalH += item.amount;
+                const parts = allData.filter(d => d.parentId === item.id);
+                const paidCount = parts.filter(d => d.paid).length;
+                let st='st-red', txt='IMPAGO', badge='badge-red';
+                if(paidCount > 0) { st='st-yellow'; txt='PARCIAL'; badge='badge-yellow'; }
+                if(paidCount === parts.length && parts.length > 0) { st='st-green'; txt='PAGADO'; badge='badge-green'; }
 
-            if (myExpenses.length === 0) {
-                 houseContainer.innerHTML = '<div class="text-center py-6 text-slate-300 text-xs italic">Sin gastos este mes</div>';
-                 personalContainer.innerHTML = '<div class="text-center py-6 text-slate-300 text-xs italic">Sin gastos este mes</div>';
-            }
+                const div = document.createElement('div');
+                div.className = `card p-4 flex justify-between items-start relative status-card ${st} dark:bg-slate-800 dark:border-slate-700`;
+                div.innerHTML = `<div><h4 class="font-bold text-slate-700 dark:text-slate-200">${item.name}</h4><p class="text-xs font-mono text-slate-400 mt-1">${formatMoney(item.amount)}</p></div><span class="px-2 py-1 rounded text-[9px] font-bold uppercase ${badge}">${txt}</span>${(currentUser.role==='admin'||currentUser.role==='partner')?`<button onclick="deleteGlobal('${item.id}')" class="absolute top-2 right-2 text-slate-300 hover:text-red-500 p-2"><i class="fas fa-trash-alt text-xs"></i></button>`:''}`;
+                list.appendChild(div);
+            });
+            document.getElementById('totalHouseLabel').textContent = formatMoney(totalH);
+        }
 
-            myExpenses.forEach(item => {
+        function renderPersonalTab() {
+            const list = document.getElementById('personalList'); list.innerHTML = '';
+            let totalP = 0;
+            const myItems = allData.filter(e => (e.type==='house' && e.userId===currentUser.email && !e.isParent) || (e.type==='personal' && e.userId===currentUser.email) || (e.type==='group_request' && e.userId===currentUser.email));
+            myItems.sort((a,b) => a.paid - b.paid);
+            
+            if(myItems.length===0) list.innerHTML='<div class="text-center py-8 text-slate-300 text-xs italic">Billetera vacía</div>';
+
+            myItems.forEach(item => {
+                if(item.approvalStatus==='pending') return;
+                totalP += item.amount;
+                const div = document.createElement('div');
                 const isHouse = item.type === 'house';
-                const isMine = item.userId === currentUser.email;
-
-                // PANEL HOGAR (Mejorado para ver estados antiguos)
-                // Se muestra si es Parent (moderno) O si es un gasto de casa "huérfano" (antiguo)
-                if (isHouse && (item.isParent || (!item.parentId && !item.isParent))) {
-                    const parts = allData.filter(d => d.parentId === item.id);
-                    const paidCount = parts.filter(d => d.paid).length;
-                    
-                    if (houseFilter === 'pending' && paidCount === parts.length && parts.length > 0) return;
-
-                    let statusClass='status-red', text='IMPAGO', badge='bg-red-100 text-red-600';
-                    
-                    // Lógica de estado robusta para antiguos y nuevos
-                    if (parts.length > 0) {
-                        if (paidCount > 0 && paidCount < parts.length) { statusClass='status-yellow'; text='PARCIAL'; badge='bg-amber-100 text-amber-700'; }
-                        else if (paidCount === parts.length) { statusClass='status-green'; text='LISTO'; badge='bg-emerald-100 text-emerald-700'; }
-                    } else {
-                        // Legacy fallback
-                         if(item.paid) { statusClass='status-green'; text='PAGADO'; badge='bg-emerald-100 text-emerald-700'; }
-                    }
-
-                    const div = document.createElement('div');
-                    div.className = `p-4 rounded-2xl border shadow-sm transition ${statusClass} relative`;
-                    div.innerHTML = `
-                        <div class="flex justify-between items-start">
-                            <div><h4 class="font-bold text-slate-700 leading-tight">${item.name}</h4><p class="text-xs font-mono font-bold text-slate-400 mt-1">${formatMoney(item.amount)}</p></div>
-                            <span class="px-2 py-1 rounded text-[9px] font-bold uppercase ${badge}">${text}</span>
-                        </div>
-                        ${(SPLIT_USERS.includes(currentUser.email)) ? `<button onclick="deleteGlobal('${item.id}')" class="absolute top-2 right-2 text-slate-300 hover:text-red-500 w-6 h-6 flex items-center justify-center rounded-full transition"><i class="fas fa-trash-alt text-xs"></i></button>` : ''}
-                    `;
-                    houseContainer.appendChild(div);
-                }
-
-                // PANEL PERSONAL
-                if (isMine && !item.isParent && item.approvalStatus !== 'pending') {
-                    sumPersonal += item.amount;
-                    const paidClass = item.paid ? 'card-personal-done' : 'card-personal-pending';
-                    let catClass = '';
-                    if(item.category==='fixed') catClass='cat-fixed';
-                    if(item.category==='occasional') catClass='cat-occasional';
-                    if(item.category==='credit') catClass='cat-credit';
-
-                    const div = document.createElement('div');
-                    div.className = `p-3 rounded-2xl flex justify-between items-center shadow-sm cursor-pointer transition ${paidClass} ${catClass}`;
-                    div.onclick = (e) => { if(!e.target.closest('button')) togglePaid(item.id, item.paid); };
-                    
-                    // Botón borrar universal (FIX BORRADO ZOMBIE)
-                    const deleteBtn = `<button onclick="deleteItem('${item.id}','${item.groupId}', '${item.type}', '${item.parentId}')" class="text-slate-300 hover:text-red-500 text-xs ml-2"><i class="fas fa-trash"></i></button>`;
-
-                    div.innerHTML = `
-                        <div class="flex items-center gap-3">
-                            <i class="fas ${item.paid ? 'fa-check-circle' : 'fa-circle'} text-lg opacity-70"></i>
-                            <div>
-                                <p class="font-bold text-sm leading-tight text-slate-700 ${item.paid?'line-through opacity-50':''}">${item.name}</p>
-                                <p class="text-xs font-mono font-bold text-slate-500">${formatMoney(item.amount)}</p>
-                            </div>
-                        </div>
-                        ${deleteBtn}
-                    `;
-                    personalContainer.appendChild(div);
-                }
+                const icon = isHouse ? 'fa-home text-indigo-400' : 'fa-receipt text-emerald-400';
+                const paidClass = item.paid ? 'card-personal-done' : 'card-personal-pending';
+                div.className = `card p-3 flex justify-between items-center cursor-pointer dark:bg-slate-800 dark:border-slate-700 ${paidClass}`;
+                div.onclick = (e) => { if(!e.target.closest('button')) togglePaid(item.id, item.paid); };
+                const del = `<button onclick="deleteItem('${item.id}','${item.groupId}','${item.type}','${item.parentId}')" class="text-slate-300 hover:text-red-500 p-2"><i class="fas fa-trash-alt text-xs"></i></button>`;
+                div.innerHTML = `<div class="flex items-center gap-3"><i class="fas ${item.paid?'fa-check-circle text-emerald-500':'fa-circle text-slate-200'} text-xl transition"></i><div><p class="font-bold text-sm text-slate-700 dark:text-slate-200 ${item.paid?'line-through opacity-50':''}">${item.name}</p><div class="flex items-center gap-2"><i class="fas ${icon} text-[10px]"></i><p class="text-xs font-mono font-bold text-slate-500 dark:text-slate-400">${formatMoney(item.amount)}</p></div></div></div>${del}`;
+                list.appendChild(div);
             });
-            document.getElementById('totalPersonal').textContent = formatMoney(sumPersonal);
+            document.getElementById('totalPersonalLabel').textContent = formatMoney(totalP);
         }
 
-        // --- SAVE ---
+        // SAVE & ACTIONS
         window.saveExpense = async () => {
             const name = document.getElementById('inputName').value;
             const amount = parseInt(document.getElementById('inputAmount').value);
-            const mode = document.getElementById('currentMode').value;
-            const category = document.getElementById('currentCategory').value;
-            const installments = category === 'credit' ? parseInt(document.getElementById('inputInstallments').value) : 1;
+            const mode = document.getElementById('currentFormMode').value;
+            const cat = document.getElementById('inputCategory').value;
+            const isCredit = document.getElementById('isCredit').checked;
+            const installments = isCredit ? parseInt(document.getElementById('inputCuotas').value) : 1;
 
-            if(!name || isNaN(amount)) return showToast("Falta info");
-
-            const batch = writeBatch(db);
-            const now = Date.now();
-            const groupId = category === 'credit' ? 'GRP_'+now : null;
-
-            const getMonth = (base, i) => {
-                let [y, m] = base.split('-').map(Number); m += i;
-                while (m > 12) { m -= 12; y++; }
-                return `${y}-${String(m).padStart(2, '0')}`;
-            };
+            if(!name || isNaN(amount)) return alert("Falta info");
+            closeModal(); const batch = writeBatch(db); const now = Date.now(); const groupId = (isCredit||mode==='custom')?'GRP_'+now:null;
+            const monthlyAmount = Math.ceil(amount / installments);
+            const getMonth = (b,i) => { let [y,m]=b.split('-').map(Number); m+=i; while(m>12){m-=12;y++} return `${y}-${String(m).padStart(2,'0')}`; };
 
             for(let i=0; i<installments; i++) {
                 const m = getMonth(selectedMonth, i);
-                const finalName = installments>1 ? `${name} (${i+1}/${installments})` : name;
-                const monthlyAmount = Math.ceil(amount / installments);
-
+                const fname = installments>1 ? `${name} (${i+1}/${installments})` : name;
                 if (mode === 'house') {
-                    if (!SPLIT_USERS.includes(currentUser.email)) return alert("Solo Admins");
+                    if (!HOUSE_ADMINS.includes(currentUser.email)) return alert("Solo Admins");
                     const pRef = getNewDoc("gastos");
-                    batch.set(pRef, { name: finalName, amount: monthlyAmount, type: 'house', isParent: true, userId: 'HOUSE', month: m, date: now, category });
+                    batch.set(pRef, { name: fname, amount: monthlyAmount, type: 'house', isParent: true, userId: 'HOUSE', month: m, date: now, category: cat });
                     const half = Math.ceil(monthlyAmount / 2);
                     SPLIT_USERS.forEach(e => {
                         const cRef = getNewDoc("gastos");
-                        batch.set(cRef, { name: finalName, amount: half, type: 'house', parentId: pRef.id, userId: e, month: m, paid: false, date: now, approvalStatus: 'approved' });
+                        batch.set(cRef, { name: fname, amount: half, type: 'house', parentId: pRef.id, userId: e, month: m, paid: false, date: now, approvalStatus: 'approved', category: cat });
                     });
                     if(i===0) await learnPrice(name, monthlyAmount);
-                }
-                else if (mode === 'personal') {
-                    const ref = getNewDoc("gastos");
-                    batch.set(ref, { name: finalName, amount: monthlyAmount, type: 'personal', userId: currentUser.email, month: m, paid: false, date: now, approvalStatus: 'approved', category, groupId });
-                }
-                else if (mode === 'custom' && i===0) {
-                    const ppl = [currentUser.email, ...selectedParticipants];
-                    const part = Math.ceil(amount / ppl.length);
-                    ppl.forEach(e => {
+                } else {
+                    const participants = [currentUser.email, ...selectedParticipants];
+                    const share = Math.ceil(monthlyAmount / participants.length);
+                    participants.forEach(e => {
                         const ref = getNewDoc("gastos");
                         const isMe = e === currentUser.email;
-                        batch.set(ref, { name: `${name} (G)`, amount: part, type: isMe?'personal':'custom_out', userId: e, month: m, paid: false, date: now, requesterName: currentUser.name, requesterEmail: currentUser.email, approvalStatus: isMe?'approved':'pending', category, groupId });
+                        batch.set(ref, { name: fname + (participants.length>1?' (G)':''), amount: share, type: isMe?'personal':'group_request', userId: e, month: m, paid: false, date: now, requesterName: currentUser.name, approvalStatus: isMe?'approved':'pending', category: cat, groupId });
                     });
                 }
             }
-            await batch.commit();
-            document.getElementById('inputName').value = ''; document.getElementById('inputAmount').value = '';
-            showToast("Guardado Correctamente");
+            await batch.commit(); document.getElementById('inputName').value=''; document.getElementById('inputAmount').value='';
         };
 
-        // --- HELPERS & FIXES ---
         window.togglePaid = async (id, s) => { await updateDoc(getDocument("gastos", id), { paid: !s }); };
-        window.approveItem = async (id) => { await updateDoc(getDocument("gastos", id), { approvalStatus: 'approved' }); showToast("Aprobado"); };
+        window.approveItem = async (id) => { await updateDoc(getDocument("gastos", id), { approvalStatus: 'approved' }); };
+        window.deleteItem = async (id, gid, type, pid) => { if(type==='house'&&pid){if(confirm("¿Borrar gasto de CASA?")) await window.deleteGlobal(pid); return;} if(gid&&gid!=='undefined'){if(confirm("¿Borrar grupo/crédito?")){const q=query(getCollection("gastos"),where("groupId","==",gid));const s=await getDocs(q);const b=writeBatch(db);s.forEach(d=>b.delete(d.ref));await b.commit();}} else if(confirm("¿Borrar?")) await deleteDoc(getDocument("gastos",id)); };
+        window.deleteGlobal = async (pid) => { if(confirm("¿Borrar todo?")) { const b=writeBatch(db); b.delete(getDocument("gastos", pid)); allData.filter(d=>d.parentId===pid).forEach(c=>b.delete(getDocument("gastos",c.id))); await b.commit(); } };
         
-        // BORRADO INTELIGENTE (FIX)
-        window.deleteItem = async (id, gid, type, parentId) => {
-            if (type === 'house' && parentId && parentId !== 'undefined') {
-                 if(confirm("¿Borrar este gasto compartido para TODOS?")) await window.deleteGlobal(parentId);
-                 return;
-            }
-            // Borrado de gasto legacy (sin parentId) que sea 'house'
-            if (type === 'house' && (!parentId || parentId === 'undefined')) {
-                if(confirm("¿Borrar gasto antiguo?")) await deleteDoc(getDocument("gastos", id));
-                return;
-            }
-            if(gid && gid!=='null' && gid!==undefined) { 
-                if(confirm("¿Borrar crédito completo?")){ const q=query(getCollection("gastos"),where("groupId","==",gid)); const s=await getDocs(q); const b=writeBatch(db); s.forEach(d=>b.delete(d.ref)); await b.commit(); showToast("Eliminado"); } 
-            }
-            else if(confirm("¿Borrar?")) await deleteDoc(getDocument("gastos", id)); 
-        };
-        
-        window.deleteGlobal = async (pid) => { 
-            if(confirm("¿Borrar todo?")) { 
-                const b=writeBatch(db); b.delete(getDocument("gastos", pid)); allData.filter(d=>d.parentId===pid).forEach(c=>b.delete(getDocument("gastos", c.id))); await b.commit(); 
-            }
-        };
-
         async function checkRecurringExpenses() {
-            if(currentUser.role !== 'admin' && currentUser.role !== 'partner') return;
-            const q = query(getCollection("gastos"), where("month", "==", selectedMonth), where("type", "==", "house"));
-            const snapshot = await getDocs(q);
-            if (snapshot.empty) {
-                console.log("Generando recurrentes...");
-                const batch = writeBatch(db); const date = Date.now();
-                BASE_SERVICES.forEach(service => {
-                    const currentPrice = priceMemory[service.name] || service.amount;
-                    const pRef = getNewDoc("gastos");
-                    batch.set(pRef, { name: service.name, amount: currentPrice, type: 'house', isParent: true, userId: 'HOUSE', month: selectedMonth, date, category: 'fixed' });
-                    const half = Math.ceil(currentPrice / 2);
-                    SPLIT_USERS.forEach(email => {
-                        const cRef = getNewDoc("gastos");
-                        batch.set(cRef, { name: service.name, amount: half, type: 'house', parentId: pRef.id, userId: email, month: selectedMonth, paid: false, date, approvalStatus: 'approved', category: 'fixed' });
-                    });
+            if(currentUser.role!=='admin' && currentUser.role!=='partner') return;
+            const q = query(getCollection("gastos"), where("month","==",selectedMonth), where("type","==","house"));
+            const snap = await getDocs(q);
+            if(snap.empty) {
+                const batch = writeBatch(db); const now = Date.now();
+                BASE_SERVICES.forEach(s => {
+                    const amt = priceMemory[s.name]||s.amount; const pRef = getNewDoc("gastos");
+                    batch.set(pRef, { name:s.name, amount:amt, type:'house', isParent:true, userId:'HOUSE', month:selectedMonth, date:now, category:s.cat });
+                    const half = Math.ceil(amt/2);
+                    SPLIT_USERS.forEach(e => { const cRef = getNewDoc("gastos"); batch.set(cRef, { name:s.name, amount:half, type:'house', parentId:pRef.id, userId:e, month:selectedMonth, paid:false, date:now, approvalStatus:'approved', category:s.cat }); });
                 });
                 await batch.commit();
-                showToast("Gastos generados");
             }
         }
 
-        window.setCategory = (c) => { document.getElementById('currentCategory').value = c; ['btnCatFixed','btnCatOccasional','btnCatCredit'].forEach(b=>document.getElementById(b).className="py-2 rounded-xl text-xs font-bold bg-white text-slate-500 border border-slate-200 transition"); document.getElementById('smartButtonsContainer').classList.add('hidden'); document.getElementById('installmentsPanel').classList.add('hidden'); const a="py-2 rounded-xl text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 transition"; if(c==='fixed'){document.getElementById('btnCatFixed').className=a; document.getElementById('smartButtonsContainer').classList.remove('hidden');} else if(c==='occasional') document.getElementById('btnCatOccasional').className=a; else {document.getElementById('btnCatCredit').className=a; document.getElementById('installmentsPanel').classList.remove('hidden');} };
-        window.setMode = (m) => { document.getElementById('currentMode').value = m; ['btnModePersonal','btnModeHouse','btnModeCustom'].forEach(b=>document.getElementById(b).className="flex-1 py-3 rounded-xl border-2 text-xs font-bold transition flex flex-col items-center justify-center gap-1 border-slate-100 text-slate-400"); document.getElementById('customGroupSelector').classList.add('hidden'); const a="flex-1 py-3 rounded-xl border-2 text-xs font-bold transition flex flex-col items-center justify-center gap-1 border-indigo-500 bg-indigo-50 text-indigo-700"; if(m==='personal') document.getElementById('btnModePersonal').className=a.replace('indigo','emerald'); if(m==='house') document.getElementById('btnModeHouse').className=a; if(m==='custom') {document.getElementById('btnModeCustom').className=a.replace('indigo','purple'); document.getElementById('customGroupSelector').classList.remove('hidden');} };
-        window.filterHouse = (f) => { houseFilter = f; document.getElementById('filterAll').className = `filter-btn text-[9px] font-bold px-2 py-1 rounded ${f==='all'?'active':''} bg-slate-200`; document.getElementById('filterPending').className = `filter-btn text-[9px] font-bold px-2 py-1 rounded ${f==='pending'?'active':''} bg-slate-200`; renderLists(); };
+        function renderNotifications(reqs) {
+            const list = document.getElementById('requestsList'); const badge = document.getElementById('notifBadge'); list.innerHTML = '';
+            if (reqs.length > 0) { badge.classList.remove('hidden'); reqs.forEach(r => list.innerHTML += `<div class="bg-white dark:bg-slate-700 p-3 rounded-lg border-l-4 border-orange-500 flex justify-between items-center"><div><p class="text-[9px] font-bold text-orange-600 uppercase">De ${r.requesterName}</p><p class="text-xs font-bold dark:text-white">${r.name}</p><p class="text-[10px] font-mono dark:text-slate-300">${formatMoney(r.amount)}</p></div><div class="flex gap-2"><button onclick="deleteItem('${r.id}')" class="text-red-500"><i class="fas fa-times"></i></button><button onclick="approveItem('${r.id}')" class="text-green-500"><i class="fas fa-check"></i></button></div></div>`); } 
+            else { badge.classList.add('hidden'); list.innerHTML = '<p class="text-xs text-slate-400 italic text-center">Sin novedades</p>'; }
+        }
+        window.toggleNotifications = () => document.getElementById('notificationsPanel').classList.toggle('hidden');
         window.changeMonth = () => { selectedMonth = document.getElementById('monthSelector').value; loadSalary(); listenData(); checkRecurringExpenses(); };
+
+        async function loadPriceMemory() { try{const s=await getDoc(getDocument("config","precios_aprendidos")); if(s.exists()) priceMemory=s.data(); else BASE_SERVICES.forEach(s=>priceMemory[s.name]=s.amount); renderSmartButtons();}catch(e){} }
+        async function learnPrice(n,a) { priceMemory[n]=a; try{await setDoc(getDocument("config","precios_aprendidos"),priceMemory);renderSmartButtons();}catch(e){} }
+        function renderSmartButtons() { const c = document.getElementById('smartButtons'); c.innerHTML=''; BASE_SERVICES.forEach(s=>{ const amt = priceMemory[s.name]||s.amount; const btn = document.createElement('button'); btn.className = "flex-shrink-0 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 px-3 py-2 rounded-xl text-xs font-bold shadow-sm hover:border-indigo-300 hover:text-indigo-600 transition active:scale-95 flex flex-col items-center min-w-[70px]"; btn.onclick = () => prefill(s.name, amt); btn.innerHTML = `<i class="fas ${s.icon} text-lg mb-1 opacity-50"></i><span>${s.name}</span><span class="text-[9px] font-mono text-slate-400 mt-0.5">$${Math.round(amt/1000)}k</span>`; c.appendChild(btn); }); }
+        window.prefill = (n,a) => { document.getElementById('inputName').value=n; document.getElementById('inputAmount').value=a; window.setFormMode('house'); };
+        function updateChart() { const ctx=document.getElementById('expensesChart').getContext('2d'); const map={}; allData.filter(e=>e.userId===currentUser.email).forEach(i=>map[i.category||'General']=(map[i.category||'General']||0)+i.amount); if(myChart)myChart.destroy(); myChart=new Chart(ctx,{type:'doughnut',data:{labels:Object.keys(map),datasets:[{data:Object.values(map),backgroundColor:['#6366f1','#10b981','#f59e0b','#ec4899'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{boxWidth:10,font:{size:10}}}},cutout:'75%'}}); }
         
-        async function loadPriceMemory() { try { const s=await getDoc(getDocument("config", "precios_aprendidos")); if(s.exists()) priceMemory=s.data(); else BASE_SERVICES.forEach(s=>priceMemory[s.name]=s.amount); renderSmartButtons(); } catch(e){} }
-        async function learnPrice(n,a) { priceMemory[n]=a; try{await setDoc(getDocument("config", "precios_aprendidos"),priceMemory);renderSmartButtons();}catch(e){} }
-        async function loadBudgets() { try { const s=await getDoc(getDocument("config", "presupuestos")); if(s.exists()) budgets=s.data(); } catch(e){} }
-        window.addBudget = async () => { if(currentUser.role === 'user') return; const c=prompt("Categoría:"); if(!c) return; const l=prompt("Límite:"); if(!l) return; budgets[c]=parseInt(l); await setDoc(getDocument("config", "presupuestos"), budgets); renderBudgets(); };
-        function renderSmartButtons() { const c = document.getElementById('smartButtons'); c.innerHTML=''; BASE_SERVICES.forEach(s=>{ const amt = priceMemory[s.name]||s.amount; const btn = document.createElement('button'); btn.className = "flex-shrink-0 bg-white border border-slate-200 text-slate-600 px-3 py-2 rounded-xl text-xs font-bold shadow-sm hover:border-indigo-300 hover:text-indigo-600 transition active:scale-95 flex flex-col items-center min-w-[70px]"; btn.onclick = () => prefill(s.name, amt); btn.innerHTML = `<i class="fas ${s.icon} text-lg mb-1 opacity-50"></i><span>${s.name}</span><span class="text-[9px] font-mono text-slate-400 mt-0.5">$${Math.round(amt/1000)}k</span>`; c.appendChild(btn); }); }
-        window.prefill = (n,a) => { document.getElementById('inputName').value=n; document.getElementById('inputAmount').value=a; window.setMode('house'); window.setCategory('fixed'); };
         async function loadSalary() { try { const s = await getDoc(getDocument("salaries", `salary_${currentUser.email}_${selectedMonth}`)); salaryData = s.exists() ? s.data().amount : 0; document.getElementById('salaryInput').value = salaryData > 0 ? salaryData : ''; updateSalaryUI(); } catch(e) {} }
         window.updateSalary = async () => { const a = parseInt(document.getElementById('salaryInput').value) || 0; salaryData = a; await setDoc(getDocument("salaries", `salary_${currentUser.email}_${selectedMonth}`), { amount: a }); updateSalaryUI(); };
-        function updateSalaryUI() { const paid = allData.filter(e => e.userId === currentUser.email && e.paid && e.approvalStatus !== 'pending'); const spent = paid.reduce((s, e) => s + e.amount, 0); const pct = salaryData > 0 ? (spent / salaryData) * 100 : 0; document.getElementById('salaryRemaining').textContent = formatMoney(salaryData - spent); document.getElementById('salaryBar').style.width = `${Math.min(pct, 100)}%`; }
-        function renderBudgets() { const div = document.getElementById('budgetsList'); div.innerHTML=''; const spending = {}; allData.forEach(i => { if((i.isParent||i.userId===currentUser.email) && i.category) spending[i.category] = (spending[i.category]||0)+i.amount; }); for(const [c,l] of Object.entries(budgets)) { const cur = spending[c]||0; const pct = Math.min((cur/l)*100,100); const col = pct>90?'bg-red-500':(pct>70?'bg-amber-500':'bg-emerald-500'); div.innerHTML += `<div class="mb-2"><div class="flex justify-between text-[10px] text-slate-500"><span>${c}</span><span>${Math.round(pct)}%</span></div><div class="w-full bg-slate-100 h-1.5 rounded-full"><div class="h-full ${col}" style="width:${pct}%"></div></div></div>`; } }
-        window.exportTextReport = () => { if(allData.length===0) return showToast("Nada"); let t = `REPORTE ${selectedMonth}\n================\n`; allData.forEach(e => { if((e.isParent && e.type==='house')||(e.type!=='house'&&e.userId===currentUser.email)) t+=`${e.paid?'[OK]':'[  ]'} ${e.name} $${e.amount}\n`; }); const b = new Blob([t], {type:'text/plain'}); const l = document.createElement("a"); l.href=URL.createObjectURL(b); l.download=`Reporte.txt`; l.click(); };
-        function formatMoney(v) { return new Intl.NumberFormat('es-CL', {style:'currency', currency:'CLP', maximumFractionDigits:0}).format(v); }
-        function showToast(m) { const t=document.getElementById('toast'); t.textContent=m; t.classList.remove('-translate-y-4','opacity-0'); setTimeout(()=>t.classList.add('-translate-y-4','opacity-0'),3000); }
-        function showError(m) { document.getElementById('login-error').textContent=m; document.getElementById('login-error').classList.remove('hidden'); }
+        function updateSalaryUI() { const paid = allData.filter(e => e.userId === currentUser.email && e.paid); const spent = paid.reduce((s, e) => s + e.amount, 0); const pct = salaryData > 0 ? (spent / salaryData) * 100 : 0; document.getElementById('salaryRemaining').textContent = formatMoney(salaryData - spent); document.getElementById('salaryBar').style.width = `${Math.min(pct, 100)}%`; }
+        async function loadBudgets() { try { const s=await getDoc(getDocument("config", "presupuestos")); if(s.exists()) budgets=s.data(); } catch(e){} }
+        window.addBudget = async () => { if(currentUser.role === 'user') return; const c=prompt("Categoría:"); if(!c) return; const l=prompt("Límite:"); if(!l) return; budgets[c]=parseInt(l); await setDoc(getDocument("config", "presupuestos"), budgets); renderBudgets(); };
+        function renderBudgets() { const div = document.getElementById('budgetsList'); div.innerHTML=''; const spending = {}; allData.forEach(i => { if((i.isParent||i.userId===currentUser.email) && i.category) spending[i.category] = (spending[i.category]||0)+i.amount; }); for(const [c,l] of Object.entries(budgets)) { const cur = spending[c]||0; const pct = Math.min((cur/l)*100,100); const col = pct>90?'bg-red-500':(pct>70?'bg-amber-500':'bg-emerald-500'); div.innerHTML += `<div class="mb-2"><div class="flex justify-between text-[10px] text-slate-500"><span>${c}</span><span>${formatMoney(cur)} / ${formatMoney(l)}</span></div><div class="w-full bg-slate-100 h-1.5 rounded-full"><div class="h-full ${col}" style="width:${pct}%"></div></div></div>`; } }
+        window.exportTextReport = () => { if(allData.length===0) return; let t = `REPORTE ${selectedMonth}\n\n`; allData.forEach(e => { if((e.isParent && e.type==='house')||(e.type!=='house'&&e.userId===currentUser.email)) t+=`${e.paid?'[X]':'[ ]'} ${e.name} $${e.amount}\n`; }); const b = new Blob([t], {type:'text/plain'}); const l = document.createElement("a"); l.href=URL.createObjectURL(b); l.download=`Reporte.txt`; l.click(); };
+        
         function renderParticipants() { const c=document.getElementById('participantsContainer'); c.innerHTML=''; USERS.forEach(u=>{ if(u.email===currentUser.email)return; const b=document.createElement('button'); b.className="btn-select px-3 py-2 rounded-lg border bg-white text-xs font-bold text-slate-500"; b.textContent=u.name; b.onclick=()=>{ b.classList.toggle('selected'); if(b.classList.contains('selected')) selectedParticipants.push(u.email); else selectedParticipants=selectedParticipants.filter(e=>e!==u.email); }; c.appendChild(b); }); }
+        function formatMoney(v) { return new Intl.NumberFormat('es-CL', {style:'currency', currency:'CLP', maximumFractionDigits:0}).format(v); }
     </script>
 </body>
 </html>
